@@ -7,6 +7,7 @@ Web-based cash flow projection tool for Sukut Properties, replacing an Excel wor
 ## Resume Instructions
 
 When starting a new session, do the following:
+
 1. Read this file, `docs/DECISIONS.md`, and `CONVENTIONS.md`
 2. Check the GitHub issues board: `gh issue list --label phase-1`
 3. Pick the next unassigned issue, assign yourself, and start working
@@ -15,6 +16,7 @@ When starting a new session, do the following:
 ## Current Phase
 
 **Phase 1 (core)** — see brainstorm Section 5, line 204 for full scope:
+
 - Next.js app scaffold, Postgres + Prisma schema, auth (Clerk)
 - Admin group management (add/delete sectors + non-operating sections)
 - Line item CRUD with projection strategy picker
