@@ -1,0 +1,133 @@
+/* -----------------------------------------------------------------------
+   Line Item Manager & Projection Strategy Picker
+   ----------------------------------------------------------------------- */
+
+.li-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.li-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.li-manager-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.li-manager-count {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+/* Create form */
+.li-create-form {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fbfcff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.li-create-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.li-create-row input {
+  flex: 1;
+}
+
+.li-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Line item card */
+.li-card-label {
+  font-weight: 600;
+}
+
+.li-card-method {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.li-card-edit {
+  grid-column: 1 / -1;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Strategy picker */
+.strategy-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.strategy-picker-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.strategy-picker-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.strategy-picker-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.strategy-picker-params {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.strategy-param {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.strategy-param-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.strategy-param-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+  .li-create-row {
+    flex-direction: column;
+  }
+
+  .row-card {
+    grid-template-columns: 1fr;
+  }
+}
