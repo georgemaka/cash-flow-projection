@@ -6,10 +6,15 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  quality:
+    name: Quality Gates
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cash_flow_projection?schema=public
 
@@ -20,11 +25,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Prisma validate
         run: npm run prisma:validate
@@ -35,7 +40,7 @@ jobs:
       - name: ESLint
         run: npm run lint
 
-      - name: Typecheck
+      - name: TypeScript check
         run: npm run typecheck
 
       - name: Unit tests
@@ -43,3 +48,40 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for Vercel
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to staging
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Alias to staging domain
+        run: vercel alias ${{ steps.deploy.outputs.url }} cashflow-staging.sukutproperties.com --token=${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
