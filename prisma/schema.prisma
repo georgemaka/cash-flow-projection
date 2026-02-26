@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupType {
+  sector
+  non_operating
+  custom
+}
+
+enum ProjectionMethod {
+  manual
+  annual_spread
+  prior_year_pct
+  prior_year_flat
+  custom_formula
+}
+
+enum SnapshotStatus {
+  draft
+  locked
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
+
+enum AuditSource {
+  ui_edit
+  import
+  bulk_action
+  api
+}
+
+model User {
+  id              String     @id @default(cuid())
+  name            String
+  email           String     @unique
+  role            UserRole
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  groupsCreated   Group[]    @relation("GroupCreatedBy")
+  snapshotsMade   Snapshot[] @relation("SnapshotCreatedBy")
+  snapshotsLocked Snapshot[] @relation("SnapshotLockedBy")
+  valuesUpdated   Value[]    @relation("ValueUpdatedBy")
+  audits          AuditLog[]
+}
+
+model Group {
+  id         String    @id @default(cuid())
+  name       String
+  groupType  GroupType
+  sortOrder  Int       @default(0)
+  isActive   Boolean   @default(true)
+  archivedAt DateTime?
+  createdBy  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  creator    User?     @relation("GroupCreatedBy", fields: [createdBy], references: [id])
+  lineItems  LineItem[]
+}
+
+model LineItem {
+  id               String           @id @default(cuid())
+  groupId          String
+  label            String
+  projectionMethod ProjectionMethod @default(manual)
+  projectionParams Json?
+  sortOrder        Int              @default(0)
+  isActive         Boolean          @default(true)
+  archivedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  group            Group            @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  values           Value[]
+}
+
+model Snapshot {
+  id                          String            @id @default(cuid())
+  name                        String
+  asOfMonth                   DateTime
+  status                      SnapshotStatus    @default(draft)
+  structureVersionId          String?           @unique
+  createdBy                   String
+  lockedBy                    String?
+  lockedAt                    DateTime?
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+  creator                     User              @relation("SnapshotCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  locker                      User?             @relation("SnapshotLockedBy", fields: [lockedBy], references: [id], onDelete: Restrict)
+  structureVersion            StructureVersion? @relation("SnapshotStructureVersion", fields: [structureVersionId], references: [id], onDelete: Restrict)
+  structureVersionForSnapshot StructureVersion? @relation("StructureVersionSnapshot")
+  values                      Value[]
+}
+
+model StructureVersion {
+  id                  String    @id @default(cuid())
+  snapshotId          String    @unique
+  createdAt           DateTime  @default(now())
+  snapshot            Snapshot  @relation("StructureVersionSnapshot", fields: [snapshotId], references: [id], onDelete: Restrict)
+  selectedBySnapshot  Snapshot? @relation("SnapshotStructureVersion")
+}
+
+model Value {
+  id              String    @id @default(cuid())
+  lineItemId      String
+  snapshotId      String
+  period          DateTime
+  projectedAmount Decimal?  @db.Decimal(18, 2)
+  actualAmount    Decimal?  @db.Decimal(18, 2)
+  note            String?
+  updatedBy       String?
+  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+  lineItem        LineItem  @relation(fields: [lineItemId], references: [id], onDelete: Restrict)
+  snapshot        Snapshot  @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  updater         User?     @relation("ValueUpdatedBy", fields: [updatedBy], references: [id], onDelete: Restrict)
+
+  @@unique([lineItemId, snapshotId, period])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  tableName String
+  recordId  String
+  field     String
+  oldValue  String?
+  newValue  String?
+  reason    String?
+  source    AuditSource
+  timestamp DateTime    @default(now())
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
