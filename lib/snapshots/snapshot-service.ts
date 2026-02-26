@@ -16,10 +16,10 @@ import { parseAsOfMonth } from "./types";
 /**
  * Snapshot lifecycle service.
  *
- * Snapshots progress through: draft → locked (→ draft if reopened).
+ * Snapshots progress through: draft -> locked (-> draft if reopened).
  * Locking captures a StructureVersion so the report shape is reproducible.
  * Copying creates a new draft pre-filled with the source's projected values
- * (actuals are NOT copied — per ADR-003 new snapshots start fresh).
+ * (actuals are NOT copied -- per ADR-003 new snapshots start fresh).
  */
 export class SnapshotService {
   constructor(
