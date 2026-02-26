@@ -1,0 +1,271 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { GridData, GridGroup, GridRow, PendingEdit } from "@/components/data-grid/types";
+
+interface UseGridDataResult {
+  data: GridData | null;
+  loading: boolean;
+  error: string | null;
+  reload: () => void;
+  saveEdits: (edits: PendingEdit[]) => Promise<void>;
+}
+
+/**
+ * Fetches snapshot data and transforms it into the GridData shape
+ * expected by the data grid components.
+ */
+export function useGridData(snapshotId: string | null): UseGridDataResult {
+  const [data, setData] = useState<GridData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  const reload = useCallback(() => {
+    setReloadTrigger((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!snapshotId) {
+      setData(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch snapshot, groups, and values in parallel
+        const [snapshotRes, groupsRes, valuesRes] = await Promise.all([
+          fetch(`/api/snapshots/${snapshotId}`),
+          fetch("/api/groups"),
+          fetch(`/api/values?snapshotId=${snapshotId}`)
+        ]);
+
+        if (cancelled) return;
+
+        if (!snapshotRes.ok) throw new Error("Failed to fetch snapshot");
+        if (!groupsRes.ok) throw new Error("Failed to fetch groups");
+        if (!valuesRes.ok) throw new Error("Failed to fetch values");
+
+        const snapshot = await snapshotRes.json();
+        const groups = await groupsRes.json();
+        const values = await valuesRes.json();
+
+        if (cancelled) return;
+
+        const gridData = assembleGridData(snapshot, groups, values);
+        setData(gridData);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load data");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, [snapshotId, reloadTrigger]);
+
+  const saveEdits = useCallback(
+    async (edits: PendingEdit[]) => {
+      if (!snapshotId || edits.length === 0) return;
+
+      // Group edits by lineItemId + period to merge projected/actual changes
+      const mergedEdits = new Map<
+        string,
+        { lineItemId: string; period: string; projected?: string | null; actual?: string | null }
+      >();
+
+      for (const edit of edits) {
+        const key = `${edit.lineItemId}:${edit.period}`;
+        const existing = mergedEdits.get(key) ?? {
+          lineItemId: edit.lineItemId,
+          period: edit.period
+        };
+        if (edit.field === "projected") {
+          existing.projected = edit.value;
+        } else {
+          existing.actual = edit.value;
+        }
+        mergedEdits.set(key, existing);
+      }
+
+      // Save each edit via the upsert API
+      const promises = Array.from(mergedEdits.values()).map((edit) =>
+        fetch("/api/values/upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lineItemId: edit.lineItemId,
+            snapshotId,
+            period: edit.period,
+            projectedAmount: edit.projected !== undefined ? edit.projected : undefined,
+            actualAmount: edit.actual !== undefined ? edit.actual : undefined,
+            updatedBy: null // Will be set by auth context when available
+          })
+        })
+      );
+
+      const results = await Promise.all(promises);
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length > 0) {
+        throw new Error(`Failed to save ${failed.length} value(s)`);
+      }
+    },
+    [snapshotId]
+  );
+
+  return { data, loading, error, reload, saveEdits };
+}
+
+// ---------------------------------------------------------------------------
+// Data assembly
+// ---------------------------------------------------------------------------
+
+interface SnapshotResponse {
+  id: string;
+  name: string;
+  asOfMonth: string;
+  status: "draft" | "locked";
+}
+
+interface GroupResponse {
+  id: string;
+  name: string;
+  groupType: string;
+  sortOrder: number;
+  lineItems?: LineItemResponse[];
+}
+
+interface LineItemResponse {
+  id: string;
+  label: string;
+  groupId: string;
+  projectionMethod: string;
+  sortOrder: number;
+}
+
+interface ValueResponse {
+  lineItemId: string;
+  period: string;
+  projectedAmount: string | null;
+  actualAmount: string | null;
+  note: string | null;
+  lineItem?: LineItemResponse;
+}
+
+function assembleGridData(
+  snapshot: SnapshotResponse,
+  groups: GroupResponse[],
+  values: ValueResponse[]
+): GridData {
+  // Determine periods from values, or default to current year
+  const periodSet = new Set<string>();
+  for (const v of values) {
+    const period = extractPeriod(v.period);
+    if (period) periodSet.add(period);
+  }
+
+  // If no values exist yet, generate 12 months for the snapshot year
+  if (periodSet.size === 0) {
+    const year = new Date(snapshot.asOfMonth).getUTCFullYear();
+    for (let m = 1; m <= 12; m++) {
+      periodSet.add(`${year}-${String(m).padStart(2, "0")}`);
+    }
+  }
+
+  const periods = Array.from(periodSet).sort();
+
+  // Build value lookup: lineItemId -> period -> value
+  const valueLookup = new Map<string, Map<string, ValueResponse>>();
+  for (const v of values) {
+    const period = extractPeriod(v.period);
+    if (!period) continue;
+    if (!valueLookup.has(v.lineItemId)) {
+      valueLookup.set(v.lineItemId, new Map());
+    }
+    valueLookup.get(v.lineItemId)!.set(period, v);
+  }
+
+  // Build line items from values (since values include lineItem data)
+  const lineItemsById = new Map<string, LineItemResponse>();
+  for (const v of values) {
+    if (v.lineItem && !lineItemsById.has(v.lineItemId)) {
+      lineItemsById.set(v.lineItemId, v.lineItem);
+    }
+  }
+
+  // Build grid groups
+  const gridGroups: GridGroup[] = groups
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((group) => {
+      // Find line items for this group
+      const groupLineItems = Array.from(lineItemsById.values())
+        .filter((li) => li.groupId === group.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+
+      const rows: GridRow[] = groupLineItems.map((li) => {
+        const itemValues = valueLookup.get(li.id) ?? new Map();
+        const values: GridRow["values"] = {};
+        for (const p of periods) {
+          const v = itemValues.get(p);
+          values[p] = {
+            projected: v?.projectedAmount ?? null,
+            actual: v?.actualAmount ?? null,
+            note: v?.note ?? null,
+            dirty: false
+          };
+        }
+        return {
+          lineItemId: li.id,
+          label: li.label,
+          projectionMethod: li.projectionMethod,
+          groupId: li.groupId,
+          values
+        };
+      });
+
+      return {
+        id: group.id,
+        name: group.name,
+        groupType: group.groupType,
+        sortOrder: group.sortOrder,
+        rows
+      };
+    })
+    .filter((g) => g.rows.length > 0);
+
+  return {
+    snapshotId: snapshot.id,
+    snapshotName: snapshot.name,
+    snapshotStatus: snapshot.status,
+    periods,
+    groups: gridGroups
+  };
+}
+
+/**
+ * Extract a YYYY-MM string from various date formats
+ * (ISO string, Date, or already formatted).
+ */
+function extractPeriod(raw: string | Date): string | null {
+  if (!raw) return null;
+  const str = typeof raw === "string" ? raw : raw.toISOString();
+  // Try YYYY-MM format
+  const shortMatch = /^(\d{4}-\d{2})$/.exec(str);
+  if (shortMatch) return shortMatch[1];
+  // Try ISO format
+  const isoMatch = /^(\d{4})-(\d{2})/.exec(str);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}`;
+  return null;
+}

@@ -1,0 +1,157 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { CashFlowGrid } from "./CashFlowGrid";
+import { MobileCardView } from "./MobileCardView";
+import type { GridData, PendingEdit } from "./types";
+
+interface DataGridViewProps {
+  data: GridData;
+  editable: boolean;
+  onSave?: (edits: PendingEdit[]) => Promise<void>;
+}
+
+/**
+ * Responsive data grid view.
+ * Shows a spreadsheet table on desktop and card-based layout on mobile.
+ * Manages pending edits and save state.
+ */
+export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
+  const [viewMode, setViewMode] = useState<"projected" | "actual" | "variance">("projected");
+  const [pendingEdits, setPendingEdits] = useState<PendingEdit[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [gridData, setGridData] = useState<GridData>(data);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Reset grid data when prop changes
+  useEffect(() => {
+    setGridData(data);
+    setPendingEdits([]);
+  }, [data]);
+
+  const handleCellChange = useCallback((edit: PendingEdit) => {
+    // Optimistically update the grid data
+    setGridData((prev) => {
+      const updated = { ...prev, groups: prev.groups.map((g) => ({
+        ...g,
+        rows: g.rows.map((r) => {
+          if (r.lineItemId !== edit.lineItemId) return r;
+          const cell = r.values[edit.period] ?? { projected: null, actual: null, note: null, dirty: false };
+          return {
+            ...r,
+            values: {
+              ...r.values,
+              [edit.period]: {
+                ...cell,
+                [edit.field]: edit.value,
+                dirty: true
+              }
+            }
+          };
+        })
+      }))};
+      return updated;
+    });
+
+    // Track pending edit (dedup by lineItemId + period + field)
+    setPendingEdits((prev) => {
+      const key = `${edit.lineItemId}:${edit.period}:${edit.field}`;
+      const filtered = prev.filter(
+        (e) => `${e.lineItemId}:${e.period}:${e.field}` !== key
+      );
+      return [...filtered, edit];
+    });
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!onSave || pendingEdits.length === 0) return;
+    setSaving(true);
+    try {
+      await onSave(pendingEdits);
+      // Clear dirty flags after successful save
+      setGridData((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          rows: g.rows.map((r) => ({
+            ...r,
+            values: Object.fromEntries(
+              Object.entries(r.values).map(([k, v]) => [k, { ...v, dirty: false }])
+            )
+          }))
+        }))
+      }));
+      setPendingEdits([]);
+    } finally {
+      setSaving(false);
+    }
+  }, [onSave, pendingEdits]);
+
+  const isLocked = gridData.snapshotStatus === "locked";
+
+  return (
+    <div className="cf-view">
+      <div className="cf-view-toolbar">
+        <div className="cf-view-modes">
+          <button
+            className={`ghost-btn${viewMode === "projected" ? " cf-view-mode-active" : ""}`}
+            onClick={() => setViewMode("projected")}
+            type="button"
+          >
+            Projected
+          </button>
+          <button
+            className={`ghost-btn${viewMode === "actual" ? " cf-view-mode-active" : ""}`}
+            onClick={() => setViewMode("actual")}
+            type="button"
+          >
+            Actual
+          </button>
+          <button
+            className={`ghost-btn${viewMode === "variance" ? " cf-view-mode-active" : ""}`}
+            onClick={() => setViewMode("variance")}
+            type="button"
+          >
+            Variance
+          </button>
+        </div>
+        <div className="cf-view-actions">
+          {isLocked && (
+            <span className="snapshot-chip locked">Locked</span>
+          )}
+          {editable && !isLocked && (
+            <button
+              onClick={handleSave}
+              disabled={saving || pendingEdits.length === 0}
+              type="button"
+            >
+              {saving ? "Saving..." : `Save (${pendingEdits.length})`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isMobile ? (
+        <MobileCardView
+          data={gridData}
+          editable={editable}
+          onCellChange={handleCellChange}
+        />
+      ) : (
+        <CashFlowGrid
+          data={gridData}
+          editable={editable}
+          onCellChange={handleCellChange}
+          viewMode={viewMode}
+        />
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,405 @@
+/* -----------------------------------------------------------------------
+   Cash Flow Data Grid — Desktop spreadsheet + Mobile card layout
+   ----------------------------------------------------------------------- */
+
+/* Wrapper & scroll */
+.cf-grid-wrapper {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.cf-grid-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table */
+.cf-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.cf-grid th,
+.cf-grid td {
+  padding: 0.45rem 0.6rem;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Header */
+.cf-grid thead th {
+  background: #f5f8ff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.cf-grid-subheader th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.6rem;
+}
+
+/* Sticky first column */
+.cf-grid-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+  text-align: left;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.cf-grid thead .cf-grid-sticky-col {
+  z-index: 3;
+  background: #f5f8ff;
+}
+
+.cf-grid-label-col {
+  min-width: 180px;
+}
+
+.cf-grid-period-col {
+  min-width: 90px;
+}
+
+.cf-grid-total-col {
+  min-width: 100px;
+  font-weight: 700;
+}
+
+/* Group header row */
+.cf-grid-group-header {
+  background: #edf2ff;
+}
+
+.cf-grid-group-header td {
+  border-bottom: 2px solid var(--primary);
+}
+
+.cf-grid-group-header .cf-grid-sticky-col {
+  background: #edf2ff;
+}
+
+.cf-grid-group-name {
+  font-weight: 700;
+  color: var(--primary-deep);
+  margin-right: 0.5rem;
+}
+
+.cf-grid-group-type {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.cf-grid-group-cell {
+  background: #edf2ff;
+}
+
+/* Line item rows */
+.cf-grid-row:hover {
+  background: #f8faff;
+}
+
+.cf-grid-row:hover .cf-grid-sticky-col {
+  background: #f8faff;
+}
+
+.cf-grid-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-grid-item-label {
+  font-weight: 500;
+}
+
+.cf-grid-item-method {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+/* Cell values */
+.cf-grid-val {
+  display: block;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.cf-grid-val-editable {
+  cursor: pointer;
+}
+
+.cf-grid-val-editable:hover {
+  background: #edf2ff;
+}
+
+.cf-grid-cell-dirty .cf-grid-val {
+  background: #fff8e1;
+}
+
+/* Inline edit input */
+.cf-grid-input {
+  width: 80px;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.88rem;
+  text-align: right;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+/* Variance view */
+.cf-grid-variance-cell {
+  display: flex;
+  gap: 0.15rem;
+  justify-content: flex-end;
+}
+
+.cf-grid-variance-cell > span {
+  flex: 1;
+  text-align: right;
+  min-width: 55px;
+}
+
+.cf-grid-sublabels {
+  display: flex;
+  gap: 0.15rem;
+  justify-content: flex-end;
+}
+
+.cf-grid-sublabels > span {
+  flex: 1;
+  text-align: right;
+  min-width: 55px;
+}
+
+.cf-grid-var-positive {
+  color: #177137;
+}
+
+.cf-grid-var-negative {
+  color: var(--danger);
+}
+
+/* Subtotal row */
+.cf-grid-subtotal {
+  background: #f9fbff;
+  font-weight: 700;
+}
+
+.cf-grid-subtotal .cf-grid-sticky-col {
+  background: #f9fbff;
+}
+
+.cf-grid-subtotal-label {
+  font-size: 0.84rem;
+  color: var(--primary-deep);
+}
+
+.cf-grid-subtotal-cell {
+  font-weight: 700;
+  border-top: 2px solid var(--line);
+}
+
+/* Total column */
+.cf-grid-total-cell {
+  font-weight: 600;
+  background: #fafbff;
+}
+
+.cf-grid-total-value {
+  font-weight: 700;
+}
+
+/* -----------------------------------------------------------------------
+   View toolbar
+   ----------------------------------------------------------------------- */
+.cf-view-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  gap: 0.75rem;
+}
+
+.cf-view-modes {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.cf-view-mode-active {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.cf-view-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* -----------------------------------------------------------------------
+   Mobile card view
+   ----------------------------------------------------------------------- */
+.cf-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cf-mobile-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cf-mobile-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid var(--primary);
+}
+
+.cf-mobile-group-name {
+  font-weight: 700;
+  color: var(--primary-deep);
+}
+
+.cf-mobile-group-type {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.cf-mobile-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.cf-mobile-card-expanded {
+  border-color: var(--primary);
+}
+
+.cf-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  background: transparent;
+  color: var(--ink);
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cf-mobile-card-label {
+  flex: 1;
+}
+
+.cf-mobile-card-total {
+  font-weight: 700;
+  color: var(--primary-deep);
+  margin: 0 0.5rem;
+}
+
+.cf-mobile-card-chevron {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.cf-mobile-card-body {
+  border-top: 1px solid var(--line);
+}
+
+.cf-mobile-month {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #f0f4ff;
+}
+
+.cf-mobile-month:last-child {
+  border-bottom: none;
+}
+
+.cf-mobile-month-label {
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--muted);
+  min-width: 50px;
+}
+
+.cf-mobile-month-values {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cf-mobile-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  min-width: 70px;
+}
+
+.cf-mobile-field-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.cf-mobile-field-value {
+  font-size: 0.9rem;
+}
+
+.cf-mobile-editable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+}
+
+.cf-mobile-editable:active {
+  background: #edf2ff;
+}
+
+.cf-mobile-input {
+  width: 70px;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.9rem;
+  text-align: right;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+/* -----------------------------------------------------------------------
+   Responsive
+   ----------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .cf-view-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
