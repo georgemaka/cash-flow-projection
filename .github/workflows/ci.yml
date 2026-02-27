@@ -47,11 +47,28 @@ jobs:
       - name: TypeScript check
         run: npm run typecheck
 
-      - name: Unit tests
-        run: npm run test:ci
+      - name: Unit & integration tests (with coverage)
+        run: npm run test:ci:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
 
       - name: Build
         run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: npm run test:e2e
+        continue-on-error: true
+        env:
+          DEV_AUTH_BYPASS: "true"
 
   deploy-staging:
     name: Deploy to Staging
