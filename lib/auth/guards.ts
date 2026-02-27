@@ -1,12 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { AppRole, AuthContext } from "./types";
+import { isDevAuthBypassEnabled } from "./dev-bypass";
 
 /**
  * Returns the current auth context (clerkUserId + role) or null if not signed in.
  * Role defaults to "viewer" if not set in publicMetadata.
  */
 export async function getAuthContext(): Promise<AuthContext | null> {
+  if (isDevAuthBypassEnabled()) {
+    return { clerkUserId: "dev-bypass-user", role: "admin" };
+  }
   const { userId, sessionClaims } = await auth();
   if (!userId) return null;
   const role: AppRole = sessionClaims?.publicMetadata?.role ?? "viewer";

@@ -1,12 +1,22 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
+import { isDevAuthBypassEnabled } from "./lib/auth/dev-bypass";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
-export default clerkMiddleware(async (auth, request) => {
+const clerkAuthMiddleware = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
 });
+
+export default function middleware(request: NextRequest, event: NextFetchEvent) {
+  if (isDevAuthBypassEnabled()) {
+    return NextResponse.next();
+  }
+
+  return clerkAuthMiddleware(request, event);
+}
 
 export const config = {
   matcher: [

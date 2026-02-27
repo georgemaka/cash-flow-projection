@@ -36,12 +36,13 @@ Web-based cash flow projection tool for Sukut Properties.
 
 Add these to `.env` (see `.env.example` for the full list):
 
-| Variable                            | Description                                  |
-| ----------------------------------- | -------------------------------------------- |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (from Clerk dashboard) |
-| `CLERK_SECRET_KEY`                  | Clerk secret key (from Clerk dashboard)      |
-| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Sign-in page path (default: `/sign-in`)      |
-| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Sign-up page path (default: `/sign-up`)      |
+| Variable                            | Description                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `DEV_AUTH_BYPASS`                   | Local dev only. Set `true` to bypass Clerk auth and treat requests as admin. |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (from Clerk dashboard)                                 |
+| `CLERK_SECRET_KEY`                  | Clerk secret key (from Clerk dashboard)                                      |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Sign-in page path (default: `/sign-in`)                                      |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Sign-up page path (default: `/sign-up`)                                      |
 
 ### Role Model
 
