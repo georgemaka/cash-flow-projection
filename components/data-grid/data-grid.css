@@ -227,6 +227,101 @@
 }
 
 /* -----------------------------------------------------------------------
+   Cell-level notes — desktop
+   ----------------------------------------------------------------------- */
+
+/* Cells need relative positioning for the note button anchor */
+.cf-grid-cell {
+  position: relative;
+}
+
+/* Note button area — anchored to top-right of cell */
+.cf-cell-note-area {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 4;
+}
+
+/* The dot button */
+.cf-note-btn {
+  font-size: 0.5rem;
+  line-height: 1;
+  padding: 1px 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.1s;
+  border-radius: 2px;
+}
+
+/* Show on cell hover */
+.cf-grid-cell:hover .cf-note-btn {
+  opacity: 0.6;
+}
+
+/* Always visible when there is a note */
+.cf-note-btn-filled {
+  color: var(--primary);
+  opacity: 1 !important;
+}
+
+.cf-note-btn-filled:hover {
+  opacity: 0.8 !important;
+}
+
+/* Popover panel */
+.cf-note-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  width: 220px;
+  background: var(--card);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cf-note-textarea {
+  width: 100%;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cf-note-textarea:focus {
+  border-color: var(--primary);
+}
+
+.cf-note-actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.cf-note-save {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.cf-note-cancel {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+}
+
+/* -----------------------------------------------------------------------
    View toolbar
    ----------------------------------------------------------------------- */
 .cf-view-toolbar {
@@ -333,8 +428,8 @@
 
 .cf-mobile-month {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.4rem;
   padding: 0.5rem 0.8rem;
   border-bottom: 1px solid #f0f4ff;
 }
@@ -392,6 +487,71 @@
   border: 2px solid var(--primary);
   border-radius: 4px;
   outline: none;
+}
+
+/* Mobile month row — now column-oriented to accommodate note */
+.cf-mobile-month-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Note row inside expanded month card */
+.cf-mobile-note-row {
+  padding-top: 0.3rem;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cf-mobile-note-text {
+  font-size: 0.78rem;
+  color: var(--ink);
+  line-height: 1.4;
+  padding: 0.15rem 0.2rem;
+  border-radius: 4px;
+}
+
+.cf-mobile-note-editable {
+  cursor: pointer;
+}
+
+.cf-mobile-note-editable:active {
+  background: #edf2ff;
+}
+
+.cf-mobile-note-placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cf-mobile-note-input {
+  width: 100%;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.cf-mobile-note-actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.cf-mobile-note-save {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.cf-mobile-note-cancel {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
 }
 
 /* -----------------------------------------------------------------------

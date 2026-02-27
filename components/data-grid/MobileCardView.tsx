@@ -114,6 +114,7 @@ function MobileItemCard({
                 lineItemId={row.lineItemId}
                 projected={cell.projected}
                 actual={cell.actual}
+                note={cell.note}
                 canEdit={canEdit}
                 onCellChange={onCellChange}
               />
@@ -130,6 +131,7 @@ interface MobileMonthRowProps {
   lineItemId: string;
   projected: string | null;
   actual: string | null;
+  note: string | null;
   canEdit: boolean;
   onCellChange?: (edit: PendingEdit) => void;
 }
@@ -139,12 +141,17 @@ function MobileMonthRow({
   lineItemId,
   projected,
   actual,
+  note,
   canEdit,
   onCellChange
 }: MobileMonthRowProps) {
   const [editingField, setEditingField] = useState<"projected" | "actual" | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteValue, setNoteValue] = useState("");
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
 
   const startEdit = useCallback(
     (field: "projected" | "actual") => {
@@ -177,47 +184,109 @@ function MobileMonthRow({
     [commitEdit]
   );
 
+  const startNoteEdit = useCallback(() => {
+    if (!canEdit) return;
+    setNoteValue(note ?? "");
+    setEditingNote(true);
+    setTimeout(() => noteInputRef.current?.focus(), 0);
+  }, [canEdit, note]);
+
+  const commitNote = useCallback(() => {
+    if (!onCellChange) return;
+    const trimmed = noteValue.trim() || null;
+    if (trimmed !== note) {
+      onCellChange({ lineItemId, period, field: "note", value: trimmed });
+    }
+    setEditingNote(false);
+  }, [noteValue, note, lineItemId, period, onCellChange]);
+
+  const cancelNote = useCallback(() => {
+    setEditingNote(false);
+    setNoteValue("");
+  }, []);
+
   return (
     <div className="cf-mobile-month">
-      <span className="cf-mobile-month-label">{formatPeriodLabel(period)}</span>
-      <div className="cf-mobile-month-values">
-        <div className="cf-mobile-field" onClick={() => startEdit("projected")}>
-          <span className="cf-mobile-field-label">Proj</span>
-          {editingField === "projected" ? (
-            <input
-              ref={inputRef}
-              className="cf-mobile-input"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={commitEdit}
-              onKeyDown={handleKeyDown}
-              inputMode="decimal"
-            />
-          ) : (
-            <span className={`cf-mobile-field-value${canEdit ? " cf-mobile-editable" : ""}`}>
-              {formatCurrency(projected)}
-            </span>
-          )}
-        </div>
-        <div className="cf-mobile-field" onClick={() => startEdit("actual")}>
-          <span className="cf-mobile-field-label">Act</span>
-          {editingField === "actual" ? (
-            <input
-              ref={inputRef}
-              className="cf-mobile-input"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={commitEdit}
-              onKeyDown={handleKeyDown}
-              inputMode="decimal"
-            />
-          ) : (
-            <span className={`cf-mobile-field-value${canEdit ? " cf-mobile-editable" : ""}`}>
-              {formatCurrency(actual)}
-            </span>
-          )}
+      <div className="cf-mobile-month-main">
+        <span className="cf-mobile-month-label">{formatPeriodLabel(period)}</span>
+        <div className="cf-mobile-month-values">
+          <div className="cf-mobile-field" onClick={() => startEdit("projected")}>
+            <span className="cf-mobile-field-label">Proj</span>
+            {editingField === "projected" ? (
+              <input
+                ref={inputRef}
+                className="cf-mobile-input"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+              />
+            ) : (
+              <span className={`cf-mobile-field-value${canEdit ? " cf-mobile-editable" : ""}`}>
+                {formatCurrency(projected)}
+              </span>
+            )}
+          </div>
+          <div className="cf-mobile-field" onClick={() => startEdit("actual")}>
+            <span className="cf-mobile-field-label">Act</span>
+            {editingField === "actual" ? (
+              <input
+                ref={inputRef}
+                className="cf-mobile-input"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+              />
+            ) : (
+              <span className={`cf-mobile-field-value${canEdit ? " cf-mobile-editable" : ""}`}>
+                {formatCurrency(actual)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
+      {(note || canEdit) && (
+        <div className="cf-mobile-note-row">
+          {editingNote ? (
+            <>
+              <textarea
+                ref={noteInputRef}
+                className="cf-mobile-note-input"
+                value={noteValue}
+                onChange={(e) => setNoteValue(e.target.value)}
+                placeholder="Add a note\u2026"
+                rows={2}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") cancelNote();
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) commitNote();
+                }}
+              />
+              <div className="cf-mobile-note-actions">
+                <button onClick={commitNote} type="button" className="cf-mobile-note-save">
+                  Save
+                </button>
+                <button
+                  onClick={cancelNote}
+                  type="button"
+                  className="ghost-btn cf-mobile-note-cancel"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              className={`cf-mobile-note-text${canEdit ? " cf-mobile-note-editable" : ""}`}
+              onClick={canEdit ? startNoteEdit : undefined}
+            >
+              {note ?? <span className="cf-mobile-note-placeholder">Add note\u2026</span>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
