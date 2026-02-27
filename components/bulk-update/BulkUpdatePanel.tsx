@@ -147,9 +147,9 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
 
   return (
     <div className="bu-overlay">
-      <div className="bu-panel" role="dialog" aria-modal="true" aria-label="Bulk update">
+      <div className="bu-panel" role="dialog" aria-modal="true" aria-labelledby="bu-panel-title">
         <div className="bu-panel-header">
-          <h3 className="bu-panel-title">Bulk Update</h3>
+          <h3 className="bu-panel-title" id="bu-panel-title">Bulk Update</h3>
           <button className="ghost-btn bu-close" onClick={onClose} type="button">
             &times;
           </button>
@@ -179,6 +179,7 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
                 className={`ghost-btn${field === "projected" ? " bu-toggle-active" : ""}`}
                 onClick={() => setField("projected")}
                 type="button"
+                aria-pressed={field === "projected"}
               >
                 Projected
               </button>
@@ -186,6 +187,7 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
                 className={`ghost-btn${field === "actual" ? " bu-toggle-active" : ""}`}
                 onClick={() => setField("actual")}
                 type="button"
+                aria-pressed={field === "actual"}
               >
                 Actual
               </button>
@@ -199,6 +201,7 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
                 className={`ghost-btn${operation === "multiply" ? " bu-toggle-active" : ""}`}
                 onClick={() => setOperation("multiply")}
                 type="button"
+                aria-pressed={operation === "multiply"}
               >
                 % Change
               </button>
@@ -206,6 +209,7 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
                 className={`ghost-btn${operation === "add" ? " bu-toggle-active" : ""}`}
                 onClick={() => setOperation("add")}
                 type="button"
+                aria-pressed={operation === "add"}
               >
                 Flat Adjust
               </button>

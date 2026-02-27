@@ -93,13 +93,19 @@ function MobileItemCard({
 
   return (
     <div className={`cf-mobile-card${expanded ? " cf-mobile-card-expanded" : ""}`}>
-      <button className="cf-mobile-card-header" onClick={onToggle} type="button">
+      <button
+        className="cf-mobile-card-header"
+        onClick={onToggle}
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={`card-body-${row.lineItemId}`}
+      >
         <span className="cf-mobile-card-label">{row.label}</span>
         <span className="cf-mobile-card-total">{formatCurrency(projTotal.toFixed(2))}</span>
         <span className="cf-mobile-card-chevron">{expanded ? "\u25B2" : "\u25BC"}</span>
       </button>
       {expanded && (
-        <div className="cf-mobile-card-body">
+        <div className="cf-mobile-card-body" id={`card-body-${row.lineItemId}`}>
           {periods.map((p) => {
             const cell = row.values[p] ?? {
               projected: null,
