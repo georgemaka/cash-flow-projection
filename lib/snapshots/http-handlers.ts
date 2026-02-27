@@ -100,7 +100,9 @@ export async function lockSnapshot(
     if (error instanceof AlreadyLockedError) {
       return { status: 409, body: { error: error.message } };
     }
-    return { status: 500, body: { error: "Failed to lock snapshot" } };
+    console.error("[lockSnapshot]", error);
+    const msg = error instanceof Error ? error.message : "Failed to lock snapshot";
+    return { status: 500, body: { error: msg } };
   }
 }
 
@@ -121,7 +123,9 @@ export async function unlockSnapshot(
     if (error instanceof AlreadyUnlockedError) {
       return { status: 409, body: { error: error.message } };
     }
-    return { status: 500, body: { error: "Failed to unlock snapshot" } };
+    console.error("[unlockSnapshot]", error);
+    const msg = error instanceof Error ? error.message : "Failed to unlock snapshot";
+    return { status: 500, body: { error: msg } };
   }
 }
 
