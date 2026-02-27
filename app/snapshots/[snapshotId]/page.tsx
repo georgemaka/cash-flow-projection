@@ -2,16 +2,19 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { DataGridView } from "@/components/data-grid";
 import type { PendingEdit } from "@/components/data-grid";
 import { useGridData } from "@/lib/hooks/use-grid-data";
+import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import "@/components/data-grid/data-grid.css";
 
 export default function SnapshotDataEntryPage() {
   const params = useParams();
   const snapshotId = params.snapshotId as string;
+  const { toast } = useToast();
+  const [locking, setLocking] = useState(false);
 
   const { data, loading, error, reload, saveEdits } = useGridData(snapshotId);
 
@@ -21,6 +24,50 @@ export default function SnapshotDataEntryPage() {
     },
     [saveEdits]
   );
+
+  const handleLock = useCallback(async () => {
+    if (!confirm("Lock this snapshot? It will become read-only until unlocked.")) return;
+    setLocking(true);
+    try {
+      const res = await fetch("/api/snapshots/lock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snapshotId, lockedBy: "admin" }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error ?? "Failed to lock");
+      }
+      toast("Snapshot locked", "success");
+      reload();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Lock failed", "error");
+    } finally {
+      setLocking(false);
+    }
+  }, [snapshotId, reload, toast]);
+
+  const handleUnlock = useCallback(async () => {
+    if (!confirm("Unlock this snapshot? It will become editable again.")) return;
+    setLocking(true);
+    try {
+      const res = await fetch("/api/snapshots/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snapshotId, unlockedBy: "admin" }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error ?? "Failed to unlock");
+      }
+      toast("Snapshot unlocked", "success");
+      reload();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Unlock failed", "error");
+    } finally {
+      setLocking(false);
+    }
+  }, [snapshotId, reload, toast]);
 
   return (
     <div className="dashboard-shell-wide">
@@ -55,6 +102,17 @@ export default function SnapshotDataEntryPage() {
                   {data.groups.reduce((sum, g) => sum + g.rows.length, 0)} line items
                 </span>
               </div>
+            </div>
+            <div>
+              {data.snapshotStatus === "draft" ? (
+                <button onClick={handleLock} disabled={locking} type="button">
+                  {locking ? "Locking..." : "Lock Snapshot"}
+                </button>
+              ) : (
+                <button className="ghost-btn" onClick={handleUnlock} disabled={locking} type="button">
+                  {locking ? "Unlocking..." : "Unlock Snapshot"}
+                </button>
+              )}
             </div>
           </div>
         </div>
