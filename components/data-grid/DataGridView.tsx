@@ -5,11 +5,15 @@ import { CashFlowGrid } from "./CashFlowGrid";
 import { MobileCardView } from "./MobileCardView";
 import type { GridData, PendingEdit } from "./types";
 import { ReasonRequiredError } from "@/lib/hooks/use-grid-data";
+import { BulkUpdatePanel } from "@/components/bulk-update/BulkUpdatePanel";
+import "@/components/bulk-update/bulk-update.css";
 
 interface DataGridViewProps {
   data: GridData;
   editable: boolean;
   onSave?: (edits: PendingEdit[], reason?: string) => Promise<void>;
+  /** Called after a bulk update so the parent can reload grid data. */
+  onReload?: () => void;
 }
 
 /**
@@ -17,12 +21,13 @@ interface DataGridViewProps {
  * Shows a spreadsheet table on desktop and card-based layout on mobile.
  * Manages pending edits and save state.
  */
-export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
+export function DataGridView({ data, editable, onSave, onReload }: DataGridViewProps) {
   const [viewMode, setViewMode] = useState<"projected" | "actual" | "variance">("projected");
   const [pendingEdits, setPendingEdits] = useState<PendingEdit[]>([]);
   const [saving, setSaving] = useState(false);
   const [gridData, setGridData] = useState<GridData>(data);
   const [isMobile, setIsMobile] = useState(false);
+  const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
   const [reasonPrompt, setReasonPrompt] = useState<{
     threshold: number;
     delta: number;
@@ -165,13 +170,18 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
         <div className="cf-view-actions">
           {isLocked && <span className="snapshot-chip locked">Locked</span>}
           {editable && !isLocked && (
-            <button
-              onClick={() => handleSave()}
-              disabled={saving || pendingEdits.length === 0}
-              type="button"
-            >
-              {saving ? "Saving..." : `Save (${pendingEdits.length})`}
-            </button>
+            <>
+              <button className="ghost-btn" onClick={() => setBulkPanelOpen(true)} type="button">
+                Bulk Edit
+              </button>
+              <button
+                onClick={() => handleSave()}
+                disabled={saving || pendingEdits.length === 0}
+                type="button"
+              >
+                {saving ? "Saving..." : `Save (${pendingEdits.length})`}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -217,6 +227,18 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
           editable={editable}
           onCellChange={handleCellChange}
           viewMode={viewMode}
+        />
+      )}
+
+      {bulkPanelOpen && (
+        <BulkUpdatePanel
+          snapshotId={gridData.snapshotId}
+          groups={gridData.groups}
+          onClose={() => setBulkPanelOpen(false)}
+          onSuccess={() => {
+            setBulkPanelOpen(false);
+            onReload?.();
+          }}
         />
       )}
     </div>

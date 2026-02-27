@@ -1,0 +1,244 @@
+/* -----------------------------------------------------------------------
+   Bulk Update Panel
+   ----------------------------------------------------------------------- */
+
+.bu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(16, 37, 76, 0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+.bu-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(16, 37, 76, 0.18);
+  width: 440px;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.bu-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.2rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.bu-panel-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--primary-deep);
+}
+
+.bu-close {
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+}
+
+.bu-form {
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bu-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bu-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 90px;
+}
+
+.bu-select {
+  flex: 1;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.bu-select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.bu-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.bu-toggle-active {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.bu-input {
+  flex: 1;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  text-align: right;
+  outline: none;
+}
+
+.bu-input:focus {
+  border-color: var(--primary);
+}
+
+.bu-operand-preview {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--primary-deep);
+  min-width: 60px;
+  text-align: right;
+}
+
+.bu-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}
+
+.bu-error {
+  margin: 0 1.2rem 0.5rem;
+}
+
+/* -----------------------------------------------------------------------
+   Preview table
+   ----------------------------------------------------------------------- */
+.bu-preview-section {
+  padding: 0 1.2rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bu-preview-summary {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.bu-preview-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 280px;
+}
+
+.bu-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.bu-preview-table th,
+.bu-preview-table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.bu-preview-table th {
+  background: #f5f8ff;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  position: sticky;
+  top: 0;
+}
+
+.bu-preview-label {
+  text-align: left;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bu-preview-period {
+  text-align: center;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.bu-preview-val {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bu-preview-old {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.bu-preview-new {
+  color: var(--primary-deep);
+  font-weight: 600;
+}
+
+.bu-preview-trunc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding: 0.3rem 0.5rem;
+  margin: 0;
+}
+
+/* -----------------------------------------------------------------------
+   Confirm / Undo section
+   ----------------------------------------------------------------------- */
+.bu-confirm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bu-reason-input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.bu-reason-input:focus {
+  border-color: var(--primary);
+}
+
+.bu-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bu-undone-badge {
+  font-size: 0.82rem;
+  color: #177137;
+  font-weight: 600;
+}

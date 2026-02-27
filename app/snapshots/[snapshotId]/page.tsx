@@ -58,7 +58,12 @@ export default function SnapshotDataEntryPage() {
       )}
 
       {data && (
-        <DataGridView data={data} editable={data.snapshotStatus === "draft"} onSave={handleSave} />
+        <DataGridView
+          data={data}
+          editable={data.snapshotStatus === "draft"}
+          onSave={handleSave}
+          onReload={reload}
+        />
       )}
     </div>
   );
