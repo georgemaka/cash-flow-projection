@@ -125,7 +125,8 @@ function AnnualSpreadParams({ params, onChange, disabled }: ParamProps) {
       />
       {annualTotal && !isNaN(Number(annualTotal.replace(/,/g, ""))) && (
         <p className="strategy-param-hint">
-          Monthly: ${(Number(annualTotal.replace(/,/g, "")) / 12).toLocaleString("en-US", {
+          Monthly: $
+          {(Number(annualTotal.replace(/,/g, "")) / 12).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
           })}

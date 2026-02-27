@@ -49,7 +49,10 @@ export async function listValues(
   }
 }
 
-export async function upsertValue(service: ValueServiceLike, payload: unknown): Promise<HandlerResult> {
+export async function upsertValue(
+  service: ValueServiceLike,
+  payload: unknown
+): Promise<HandlerResult> {
   if (!isRecord(payload)) {
     return { status: 400, body: { error: "Invalid request body" } };
   }

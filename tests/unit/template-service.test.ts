@@ -261,9 +261,7 @@ describe("TemplateService.preview", () => {
   });
 
   it("handles groups with no line items", async () => {
-    prisma.group.findMany.mockResolvedValue([
-      { ...MOCK_GROUPS[0], lineItems: [] }
-    ]);
+    prisma.group.findMany.mockResolvedValue([{ ...MOCK_GROUPS[0], lineItems: [] }]);
 
     const preview = await service.preview("snap-2026", 2027);
 
@@ -674,9 +672,7 @@ describe("template http-handlers", () => {
 
     it("returns 409 for unlocked snapshot", async () => {
       const handler = await getHandler();
-      mockService.preview.mockRejectedValue(
-        new Error("Can only onboard from a locked snapshot")
-      );
+      mockService.preview.mockRejectedValue(new Error("Can only onboard from a locked snapshot"));
 
       const result = await handler(mockService, {
         sourceSnapshotId: "snap-1",
@@ -754,9 +750,7 @@ describe("template http-handlers", () => {
 
     it("returns 409 for draft source snapshot", async () => {
       const handler = await getHandler();
-      mockService.onboard.mockRejectedValue(
-        new Error("Can only onboard from a locked snapshot")
-      );
+      mockService.onboard.mockRejectedValue(new Error("Can only onboard from a locked snapshot"));
 
       const result = await handler(mockService, {
         sourceSnapshotId: "snap-draft",
