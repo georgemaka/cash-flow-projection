@@ -68,14 +68,17 @@ export class SnapshotService {
       throw new Error("Snapshot is already locked");
     }
 
-    // Create structure version and update snapshot in a transaction
+    // Create structure version and update snapshot in a transaction.
+    // The WHERE clause includes `status: "draft"` so that if a concurrent
+    // request already locked the snapshot, Prisma throws P2025 and the
+    // transaction rolls back — preventing a double-lock.
     const result = await this.prisma.$transaction(async (tx: TxClient) => {
       const structureVersion = await tx.structureVersion.create({
         data: { snapshotId: snapshot.id }
       });
 
       const updated = await tx.snapshot.update({
-        where: { id: snapshot.id },
+        where: { id: snapshot.id, status: "draft" },
         data: {
           status: "locked",
           lockedBy: input.lockedBy,
@@ -162,8 +165,7 @@ export class SnapshotService {
 
       if (sourceValues.length > 0) {
         await tx.value.createMany({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: sourceValues.map((v: any) => ({
+          data: sourceValues.map((v) => ({
             lineItemId: v.lineItemId,
             snapshotId: newSnapshot.id,
             period: v.period,

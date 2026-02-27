@@ -27,10 +27,10 @@ const CURRENCY_FORMAT = '#,##0;(#,##0);"-"';
  * - Non-Operating section
  * - Grand total (Net Cash Flow)
  */
-export async function generateExcelExport(
-  data: ExportSnapshotData
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
+// TODO(#32): Return type should be Promise<Uint8Array> once ExcelJS @types and
+// @types/node generics are aligned. Currently suppressed to avoid cascading route.ts changes.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function generateExcelExport(data: ExportSnapshotData): Promise<any> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Sukut Properties Cash Flow";
   workbook.created = new Date();
