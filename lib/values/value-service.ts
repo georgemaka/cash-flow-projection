@@ -1,6 +1,8 @@
+import Decimal from "decimal.js";
 import type { PrismaClient } from "@prisma/client";
 import { diffFields, type AuditService } from "../audit";
 import type { ListValuesInput, UpsertValueInput } from "./types";
+import { checkMaterialChange, MaterialChangeRequiredError } from "./threshold";
 
 function parsePeriod(period: string): Date {
   const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period);
@@ -50,6 +52,44 @@ export class ValueService {
         }
       }
     });
+
+    // ── Material-change threshold check (ADR-005) ──────────────────────────
+    // Only applies to existing records. New records are exempt.
+    if (existing) {
+      // Normalise to Decimal — Prisma returns Decimal objects in production
+      // but test mocks may return strings or numbers.
+      const toDecimalOrNull = (v: unknown): Decimal | null => {
+        if (v === null || v === undefined) return null;
+        return new Decimal(v.toString());
+      };
+
+      const fieldsToCheck: Array<{
+        field: "projectedAmount" | "actualAmount";
+        newStr: string | null | undefined;
+        oldDecimal: Decimal | null;
+      }> = [
+        {
+          field: "projectedAmount",
+          newStr: input.projectedAmount,
+          oldDecimal: toDecimalOrNull(existing.projectedAmount)
+        },
+        {
+          field: "actualAmount",
+          newStr: input.actualAmount,
+          oldDecimal: toDecimalOrNull(existing.actualAmount)
+        }
+      ];
+
+      for (const { field, newStr, oldDecimal } of fieldsToCheck) {
+        if (newStr === undefined) continue; // field not included in this request
+        const newDecimal = newStr !== null ? new Decimal(newStr) : null;
+        const { isMaterial, threshold, delta } = checkMaterialChange(oldDecimal, newDecimal);
+        if (isMaterial && !input.reason) {
+          throw new MaterialChangeRequiredError(field, threshold, delta);
+        }
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     const upserted = await this.prisma.value.upsert({
       where: {

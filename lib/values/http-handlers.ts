@@ -1,8 +1,9 @@
 import type { ListValuesInput, UpsertValueInput } from "./types";
+import { MaterialChangeRequiredError } from "./threshold";
 
 type HandlerResult = {
   status: number;
-  body: { data?: unknown; error?: string };
+  body: Record<string, unknown>;
 };
 
 type ValueServiceLike = {
@@ -88,6 +89,18 @@ export async function upsertValue(
 
     return { status: 200, body: { data } };
   } catch (error) {
+    if (error instanceof MaterialChangeRequiredError) {
+      return {
+        status: 422,
+        body: {
+          error: "reason_required",
+          field: error.field,
+          threshold: error.threshold,
+          delta: error.delta
+        }
+      };
+    }
+
     if (error instanceof Error && error.message.includes("period must be in YYYY-MM format")) {
       return { status: 400, body: { error: error.message } };
     }

@@ -3,12 +3,27 @@
 import { useCallback, useEffect, useState } from "react";
 import type { GridData, GridGroup, GridRow, PendingEdit } from "@/components/data-grid/types";
 
+/**
+ * Thrown by saveEdits when the API returns 422 reason_required.
+ * The caller should prompt the user for a reason and retry with it.
+ */
+export class ReasonRequiredError extends Error {
+  constructor(
+    public readonly threshold: number,
+    public readonly delta: number,
+    public readonly field: string
+  ) {
+    super("reason_required");
+    this.name = "ReasonRequiredError";
+  }
+}
+
 interface UseGridDataResult {
   data: GridData | null;
   loading: boolean;
   error: string | null;
   reload: () => void;
-  saveEdits: (edits: PendingEdit[]) => Promise<void>;
+  saveEdits: (edits: PendingEdit[], reason?: string) => Promise<void>;
 }
 
 /**
@@ -77,7 +92,7 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
   }, [snapshotId, reloadTrigger]);
 
   const saveEdits = useCallback(
-    async (edits: PendingEdit[]) => {
+    async (edits: PendingEdit[], reason?: string) => {
       if (!snapshotId || edits.length === 0) return;
 
       // Group edits by lineItemId + period to merge projected/actual changes
@@ -100,24 +115,40 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
         mergedEdits.set(key, existing);
       }
 
-      // Save each edit via the upsert API
-      const promises = Array.from(mergedEdits.values()).map((edit) =>
-        fetch("/api/values/upsert", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lineItemId: edit.lineItemId,
-            snapshotId,
-            period: edit.period,
-            projectedAmount: edit.projected !== undefined ? edit.projected : undefined,
-            actualAmount: edit.actual !== undefined ? edit.actual : undefined,
-            updatedBy: null // Will be set by auth context when available
-          })
+      // Save each edit and read response body (needed to detect 422)
+      const results = await Promise.all(
+        Array.from(mergedEdits.values()).map(async (edit) => {
+          const res = await fetch("/api/values/upsert", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lineItemId: edit.lineItemId,
+              snapshotId,
+              period: edit.period,
+              projectedAmount: edit.projected !== undefined ? edit.projected : undefined,
+              actualAmount: edit.actual !== undefined ? edit.actual : undefined,
+              updatedBy: null, // Will be set by auth context when available
+              ...(reason ? { reason } : {})
+            })
+          });
+          const body = await res.json();
+          return { status: res.status, body };
         })
       );
 
-      const results = await Promise.all(promises);
-      const failed = results.filter((r) => !r.ok);
+      // Surface the first material-change error so the UI can prompt for a reason
+      const materialError = results.find(
+        (r) => r.status === 422 && r.body.error === "reason_required"
+      );
+      if (materialError) {
+        throw new ReasonRequiredError(
+          materialError.body.threshold as number,
+          materialError.body.delta as number,
+          materialError.body.field as string
+        );
+      }
+
+      const failed = results.filter((r) => r.status >= 400);
       if (failed.length > 0) {
         throw new Error(`Failed to save ${failed.length} value(s)`);
       }

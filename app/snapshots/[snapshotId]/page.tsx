@@ -15,8 +15,8 @@ export default function SnapshotDataEntryPage() {
   const { data, loading, error, reload, saveEdits } = useGridData(snapshotId);
 
   const handleSave = useCallback(
-    async (edits: PendingEdit[]) => {
-      await saveEdits(edits);
+    async (edits: PendingEdit[], reason?: string) => {
+      await saveEdits(edits, reason);
     },
     [saveEdits]
   );

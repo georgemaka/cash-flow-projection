@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listValues, upsertValue } from "../../lib/values/http-handlers";
+import { MaterialChangeRequiredError } from "../../lib/values/threshold";
 
 function createMockService() {
   return {
@@ -72,5 +73,39 @@ describe("value HTTP handlers", () => {
 
     expect(result.status).toBe(400);
     expect(result.body.error).toBe("period must be in YYYY-MM format");
+  });
+
+  it("returns 422 with reason_required when service throws MaterialChangeRequiredError", async () => {
+    mockService.upsert.mockRejectedValueOnce(
+      new MaterialChangeRequiredError("projectedAmount", 1000, 5000)
+    );
+
+    const result = await upsertValue(mockService, {
+      lineItemId: "li-1",
+      snapshotId: "snap-1",
+      period: "2026-01",
+      projectedAmount: "15000.00"
+    });
+
+    expect(result.status).toBe(422);
+    expect(result.body.error).toBe("reason_required");
+    expect(result.body.field).toBe("projectedAmount");
+    expect(result.body.threshold).toBe(1000);
+    expect(result.body.delta).toBe(5000);
+  });
+
+  it("passes reason through to service and returns 200", async () => {
+    const result = await upsertValue(mockService, {
+      lineItemId: "li-1",
+      snapshotId: "snap-1",
+      period: "2026-01",
+      projectedAmount: "15000.00",
+      reason: "Revised budget approved in board meeting"
+    });
+
+    expect(result.status).toBe(200);
+    expect(mockService.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "Revised budget approved in board meeting" })
+    );
   });
 });
