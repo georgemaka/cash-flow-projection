@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CashFlowGrid } from "./CashFlowGrid";
 import { MobileCardView } from "./MobileCardView";
+import { NotesSidebar } from "./NotesSidebar";
 import type { GridData, PendingEdit, ViewMode } from "./types";
 import { ReasonRequiredError } from "@/lib/hooks/use-grid-data";
 import { BulkUpdatePanel } from "@/components/bulk-update/BulkUpdatePanel";
@@ -28,6 +29,7 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
   const [gridData, setGridData] = useState<GridData>(data);
   const [isMobile, setIsMobile] = useState(false);
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
+  const [notesPanelOpen, setNotesPanelOpen] = useState(false);
   const [reasonPrompt, setReasonPrompt] = useState<{
     threshold: number;
     delta: number;
@@ -141,6 +143,18 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
 
   const isLocked = gridData.snapshotStatus === "locked";
 
+  const noteCount = useMemo(() => {
+    let count = 0;
+    for (const g of gridData.groups) {
+      for (const r of g.rows) {
+        for (const cell of Object.values(r.values)) {
+          if (cell.note) count++;
+        }
+      }
+    }
+    return count;
+  }, [gridData]);
+
   return (
     <div className="cf-view">
       <div className="cf-view-toolbar">
@@ -158,6 +172,16 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
           ))}
         </div>
         <div className="cf-view-actions">
+          {!isMobile && (
+            <button
+              className={`ghost-btn${notesPanelOpen ? " cf-view-mode-active" : ""}`}
+              onClick={() => setNotesPanelOpen((prev) => !prev)}
+              type="button"
+              aria-pressed={notesPanelOpen}
+            >
+              Notes ({noteCount})
+            </button>
+          )}
           {isLocked && <span className="snapshot-chip locked">Locked</span>}
           {editable && !isLocked && (
             <>
@@ -209,16 +233,28 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
         </div>
       )}
 
-      {isMobile ? (
-        <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />
-      ) : (
-        <CashFlowGrid
-          data={gridData}
-          editable={editable}
-          onCellChange={handleCellChange}
-          viewMode={viewMode}
-        />
-      )}
+      <div className={`cf-view-body${notesPanelOpen && !isMobile ? " cf-view-body-with-sidebar" : ""}`}>
+        <div className="cf-view-main">
+          {isMobile ? (
+            <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />
+          ) : (
+            <CashFlowGrid
+              data={gridData}
+              editable={editable}
+              onCellChange={handleCellChange}
+              viewMode={viewMode}
+            />
+          )}
+        </div>
+        {notesPanelOpen && !isMobile && (
+          <NotesSidebar
+            data={gridData}
+            editable={editable && !isLocked}
+            onCellChange={handleCellChange}
+            onClose={() => setNotesPanelOpen(false)}
+          />
+        )}
+      </div>
 
       {bulkPanelOpen && (
         <BulkUpdatePanel

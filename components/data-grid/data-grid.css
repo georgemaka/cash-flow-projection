@@ -585,11 +585,210 @@
 }
 
 /* -----------------------------------------------------------------------
+   View body layout (grid + optional sidebar)
+   ----------------------------------------------------------------------- */
+.cf-view-body {
+  display: flex;
+  gap: 0;
+  transition: gap 0.25s ease;
+}
+
+.cf-view-body-with-sidebar {
+  gap: 1rem;
+}
+
+.cf-view-main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* -----------------------------------------------------------------------
+   Notes sidebar panel
+   ----------------------------------------------------------------------- */
+.cf-notes-sidebar {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: width 0.25s ease, opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cf-notes-sidebar-open {
+  width: 340px;
+  opacity: 1;
+}
+
+.cf-notes-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 14rem);
+  max-height: 700px;
+  min-width: 320px;
+}
+
+.cf-notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.cf-notes-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-deep);
+}
+
+.cf-notes-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 0.25rem;
+}
+
+.cf-notes-close {
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+}
+
+.cf-notes-controls {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.cf-notes-groupby-btn {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.cf-notes-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.cf-notes-section-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0.4rem 1rem 0.2rem;
+  background: #f5f8ff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.cf-notes-entry {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #f0f4ff;
+}
+
+.cf-notes-entry:last-child {
+  border-bottom: none;
+}
+
+.cf-notes-entry:hover {
+  background: #f8faff;
+}
+
+.cf-notes-entry-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.2rem;
+}
+
+.cf-notes-entry-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.cf-notes-entry-group {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cf-notes-entry-text {
+  font-size: 0.82rem;
+  color: var(--ink);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.cf-notes-entry-text-editable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.15rem 0.25rem;
+  margin: -0.15rem -0.25rem;
+}
+
+.cf-notes-entry-text-editable:hover {
+  background: #edf2ff;
+}
+
+.cf-notes-edit-textarea {
+  width: 100%;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+  min-height: 3rem;
+}
+
+.cf-notes-edit-actions {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+
+.cf-notes-edit-save,
+.cf-notes-edit-cancel {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.cf-notes-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* -----------------------------------------------------------------------
    Responsive
    ----------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .cf-view-toolbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .cf-notes-sidebar {
+    display: none;
   }
 }
