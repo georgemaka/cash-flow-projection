@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import { archiveGroup, getGroup, updateGroup } from "@/lib/groups/http-handlers";
 import { groupService } from "@/lib/groups/service-factory";
+import { requireAdmin, requireSignedIn } from "@/lib/auth";
 
-export async function GET(_request: Request, { params }: { params: { groupId: string } }) {
-  const result = await getGroup(groupService, params.groupId);
+export async function GET(_request: Request, { params }: { params: Promise<{ groupId: string }> }) {
+  const guard = await requireSignedIn();
+  if (guard) return guard;
+
+  const { groupId } = await params;
+  const result = await getGroup(groupService, groupId);
   return NextResponse.json(result.body, { status: result.status });
 }
 
-export async function PATCH(request: Request, { params }: { params: { groupId: string } }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ groupId: string }> }
+) {
+  const guard = await requireAdmin();
+  if (guard) return guard;
+
   let body: unknown;
 
   try {
@@ -16,16 +27,23 @@ export async function PATCH(request: Request, { params }: { params: { groupId: s
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  const { groupId } = await params;
   const payload = {
     ...(typeof body === "object" && body ? body : {}),
-    groupId: params.groupId
+    groupId
   };
 
   const result = await updateGroup(groupService, payload);
   return NextResponse.json(result.body, { status: result.status });
 }
 
-export async function DELETE(request: Request, { params }: { params: { groupId: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ groupId: string }> }
+) {
+  const guard = await requireAdmin();
+  if (guard) return guard;
+
   let body: unknown = {};
 
   try {
@@ -34,9 +52,10 @@ export async function DELETE(request: Request, { params }: { params: { groupId: 
     body = {};
   }
 
+  const { groupId } = await params;
   const payload = {
     ...(typeof body === "object" && body ? body : {}),
-    groupId: params.groupId
+    groupId
   };
 
   const result = await archiveGroup(groupService, payload);

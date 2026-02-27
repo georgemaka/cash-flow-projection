@@ -36,7 +36,12 @@ export function SnapshotList() {
   }, []);
 
   if (loading) return <p>Loading snapshots...</p>;
-  if (error) return <div className="error-banner"><p>{error}</p></div>;
+  if (error)
+    return (
+      <div className="error-banner">
+        <p>{error}</p>
+      </div>
+    );
   if (snapshots.length === 0) {
     return (
       <div className="cf-empty-state">
@@ -59,9 +64,7 @@ export function SnapshotList() {
             <span className={`snapshot-chip ${s.status}`}>{s.status}</span>
             <span className="snapshot-name">{s.name}</span>
             <span className="snapshot-month">{asOf}</span>
-            <span className="snapshot-month">
-              {new Date(s.createdAt).toLocaleDateString()}
-            </span>
+            <span className="snapshot-month">{new Date(s.createdAt).toLocaleDateString()}</span>
             <span className="ghost-btn">Open</span>
           </button>
         );
@@ -73,8 +76,18 @@ export function SnapshotList() {
 function formatAsOfMonth(raw: string): string {
   const d = new Date(raw);
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
   ];
   return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }

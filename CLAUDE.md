@@ -11,7 +11,9 @@ When starting a new session, do the following:
 1. Read this file, `docs/DECISIONS.md`, and `CONVENTIONS.md`
 2. Check the GitHub issues board: `gh issue list --label phase-1`
 3. Pick the next unassigned issue, assign yourself, and start working
-4. When done, open a PR for review
+4. When implementation is complete, move issue label to `needs-review`
+5. Open a PR using the PR template and link the issue with `Closes #<issue-number>`
+6. Wait for review + `Review Gate` checks before merge
 
 ## Current Phase
 
@@ -60,8 +62,9 @@ When starting a new session, do the following:
 
 ## Agent Coordination
 
-- **Task board:** GitHub Issues with labels (`phase-1`, `backend`, `frontend`, `schema`)
-- **Code review:** PRs reviewed by the other agent before merge
+- **Task board:** GitHub Issues with labels (`phase-1`, `backend`, `frontend`, `schema`, `ready-for-pr`, `in-review`, `needs-review`, `review-blocked`, `done`)
+- **Code review:** PRs reviewed by the other agent before merge, with findings tracked in the PR template
 - **Conflict avoidance:** assign clear ownership per PR, don't edit same files in parallel
 - **Escalation:** check this file + DECISIONS.md + CONVENTIONS.md + brainstorm doc before asking the owner
 - **`needs-owner` label:** for decisions that genuinely require human input — include a proposed default
+- **Automation:** linked issues move to `in-review` when PR opens and to `done` when merged

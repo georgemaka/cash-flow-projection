@@ -346,7 +346,9 @@ export function AdminDashboard() {
   }
 
   function getPersistedValue(lineItemId: string, period: string): ValueRecord | undefined {
-    return values.find((value) => value.lineItemId === lineItemId && value.period.slice(0, 7) === period);
+    return values.find(
+      (value) => value.lineItemId === lineItemId && value.period.slice(0, 7) === period
+    );
   }
 
   function getDraftValue(lineItemId: string, period: string) {
@@ -400,7 +402,11 @@ export function AdminDashboard() {
     const key = valueDraftKey(lineItemId, period);
     setValueSavedAt((current) => ({
       ...current,
-      [key]: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      [key]: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      })
     }));
   }
 
@@ -867,7 +873,9 @@ export function AdminDashboard() {
 
       await refreshValues(selectedSnapshotId, selectedGroupId);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Failed to save all visible values");
+      setError(
+        saveError instanceof Error ? saveError.message : "Failed to save all visible values"
+      );
     } finally {
       setBusy(false);
     }
@@ -1361,13 +1369,17 @@ export function AdminDashboard() {
             Save All Visible
           </button>
           <button
-            disabled={!selectedPeriod || !selectedSnapshotId || !selectedGroupId || isSnapshotLocked}
+            disabled={
+              !selectedPeriod || !selectedSnapshotId || !selectedGroupId || isSnapshotLocked
+            }
             onClick={handleCopyProjectedToActual}
           >
             Copy Projected -&gt; Actual
           </button>
           <button
-            disabled={!selectedPeriod || !selectedSnapshotId || !selectedGroupId || isSnapshotLocked}
+            disabled={
+              !selectedPeriod || !selectedSnapshotId || !selectedGroupId || isSnapshotLocked
+            }
             onClick={handleCopyPriorMonthProjected}
           >
             Copy Prior Month -&gt; Projected
@@ -1375,7 +1387,7 @@ export function AdminDashboard() {
         </div>
 
         <div className="list-stack">
-              {!selectedSnapshotId || !selectedGroupId ? (
+          {!selectedSnapshotId || !selectedGroupId ? (
             <p>Select both a snapshot and group to edit monthly values.</p>
           ) : null}
           {selectedSnapshotId && selectedGroupId && visibleLineItems.length === 0 ? (
@@ -1392,12 +1404,18 @@ export function AdminDashboard() {
                     <p className="value-label">{lineItem.label}</p>
                     <input
                       ref={(node) => {
-                        valueInputRefs.current[inputRefKey(lineItem.id, selectedPeriod, "projected")] =
-                          node;
+                        valueInputRefs.current[
+                          inputRefKey(lineItem.id, selectedPeriod, "projected")
+                        ] = node;
                       }}
                       value={draft.projectedAmount}
                       onChange={(event) =>
-                        setDraftField(lineItem.id, selectedPeriod, "projectedAmount", event.target.value)
+                        setDraftField(
+                          lineItem.id,
+                          selectedPeriod,
+                          "projectedAmount",
+                          event.target.value
+                        )
                       }
                       onBlur={(event) =>
                         setDraftField(
@@ -1413,11 +1431,17 @@ export function AdminDashboard() {
                     />
                     <input
                       ref={(node) => {
-                        valueInputRefs.current[inputRefKey(lineItem.id, selectedPeriod, "actual")] = node;
+                        valueInputRefs.current[inputRefKey(lineItem.id, selectedPeriod, "actual")] =
+                          node;
                       }}
                       value={draft.actualAmount}
                       onChange={(event) =>
-                        setDraftField(lineItem.id, selectedPeriod, "actualAmount", event.target.value)
+                        setDraftField(
+                          lineItem.id,
+                          selectedPeriod,
+                          "actualAmount",
+                          event.target.value
+                        )
                       }
                       onBlur={(event) =>
                         setDraftField(
@@ -1433,7 +1457,8 @@ export function AdminDashboard() {
                     />
                     <input
                       ref={(node) => {
-                        valueInputRefs.current[inputRefKey(lineItem.id, selectedPeriod, "note")] = node;
+                        valueInputRefs.current[inputRefKey(lineItem.id, selectedPeriod, "note")] =
+                          node;
                       }}
                       value={draft.note}
                       onChange={(event) =>

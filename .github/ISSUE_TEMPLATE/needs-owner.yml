@@ -1,0 +1,42 @@
+name: Needs Owner Decision
+description: Escalate a blocked decision with a proposed default and impact.
+title: "[Needs-Owner] "
+labels:
+  - needs-owner
+  - review-blocked
+body:
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision Needed
+      description: What exact decision is required.
+      placeholder: Should soft-delete retain historical projection rows in exports?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_default
+    attributes:
+      label: Proposed Default
+      description: What the agents will do if no response is provided.
+      placeholder: Keep historical rows excluded by default, add optional include flag.
+    validations:
+      required: true
+
+  - type: textarea
+    id: deadline_impact
+    attributes:
+      label: Deadline Impact
+      description: What slips if this remains unresolved.
+      placeholder: Snapshot export work can continue, but final behavior may change before release.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fallback
+    attributes:
+      label: Fallback Behavior
+      description: Safe fallback if the owner is unavailable.
+      placeholder: Ship with documented default and label as provisional in changelog.
+    validations:
+      required: true

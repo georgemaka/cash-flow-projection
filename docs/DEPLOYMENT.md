@@ -2,10 +2,10 @@
 
 ## Environments
 
-| Environment | URL | Branch | Deploy |
-|-|-|-|-|
-| Staging | cashflow-staging.sukutproperties.com | main | Auto on merge |
-| Production | cashflow.sukutproperties.com | main | Manual promotion |
+| Environment | URL                                  | Branch | Deploy           |
+| ----------- | ------------------------------------ | ------ | ---------------- |
+| Staging     | cashflow-staging.sukutproperties.com | main   | Auto on merge    |
+| Production  | cashflow.sukutproperties.com         | main   | Manual promotion |
 
 ## CI Pipeline
 
@@ -24,13 +24,14 @@ On merge to `main`, the staging deployment job runs automatically.
 
 Set these in **Settings → Secrets and variables → Actions**:
 
-| Secret | Description |
-|-|-|
+| Secret         | Description                                            |
+| -------------- | ------------------------------------------------------ |
 | `VERCEL_TOKEN` | Vercel API token (create at vercel.com/account/tokens) |
 
 ## GitHub Environment Required
 
 Create a **staging** environment in **Settings → Environments**:
+
 - No required reviewers (auto-deploy)
 - No branch restrictions (main only via `if` condition in workflow)
 
@@ -41,15 +42,16 @@ Create a **staging** environment in **Settings → Environments**:
 3. This creates `.vercel/project.json` — commit it
 4. Set environment variables in Vercel dashboard:
 
-| Variable | Value | Notes |
-|-|-|-|
-| `DATABASE_URL` | PostgreSQL connection string | Vercel Postgres or external |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | From Clerk dashboard |
-| `CLERK_SECRET_KEY` | Clerk secret key | From Clerk dashboard |
+| Variable                            | Value                        | Notes                       |
+| ----------------------------------- | ---------------------------- | --------------------------- |
+| `DATABASE_URL`                      | PostgreSQL connection string | Vercel Postgres or external |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key        | From Clerk dashboard        |
+| `CLERK_SECRET_KEY`                  | Clerk secret key             | From Clerk dashboard        |
 
 ## Custom Domain
 
 After first deploy:
+
 1. Go to Vercel project → Settings → Domains
 2. Add `cashflow-staging.sukutproperties.com`
 3. Configure DNS: CNAME record pointing to `cname.vercel-dns.com`

@@ -170,11 +170,7 @@ export function LineItemManager({ groupId, groupName }: LineItemManagerProps) {
             {creating ? "Adding..." : "Add"}
           </button>
         </div>
-        <ProjectionStrategyPicker
-          value={newConfig}
-          onChange={setNewConfig}
-          disabled={creating}
-        />
+        <ProjectionStrategyPicker value={newConfig} onChange={setNewConfig} disabled={creating} />
       </div>
 
       {/* Item list */}
@@ -189,9 +185,7 @@ export function LineItemManager({ groupId, groupName }: LineItemManagerProps) {
             onUpdateProjection={(config) => handleUpdateProjection(item.id, config)}
           />
         ))}
-        {items.length === 0 && (
-          <p className="li-empty">No line items yet. Add one above.</p>
-        )}
+        {items.length === 0 && <p className="li-empty">No line items yet. Add one above.</p>}
       </div>
     </div>
   );
@@ -235,14 +229,8 @@ function LineItemCard({ item, editing, onEdit, onArchive, onUpdateProjection }: 
       </button>
       {editing && (
         <div className="li-card-edit">
-          <ProjectionStrategyPicker
-            value={editConfig}
-            onChange={setEditConfig}
-          />
-          <button
-            onClick={() => onUpdateProjection(editConfig)}
-            type="button"
-          >
+          <ProjectionStrategyPicker value={editConfig} onChange={setEditConfig} />
+          <button onClick={() => onUpdateProjection(editConfig)} type="button">
             Save Projection
           </button>
         </div>

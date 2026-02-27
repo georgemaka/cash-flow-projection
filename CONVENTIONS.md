@@ -68,6 +68,18 @@ docs/
 - One feature per PR — keep PRs focused and reviewable
 - All PRs must pass CI before merge
 
+## Agent Review Flow
+
+- Start work from issues labeled `ready-for-pr`.
+- When implementation is complete, move issue to `needs-review`.
+- Open PR using `.github/pull_request_template.md` and link issue with `Closes #<issue-number>`.
+- Cross-review is required: Claude reviews Codex PRs and Codex reviews Claude PRs.
+- PR must pass both required checks before merge:
+  - `Quality Gates`
+  - `Review Policy Checks`
+- If code changes have no tests, include `[no-tests]` with justification in PR body.
+- Use `needs-owner` issue form for blocked product decisions.
+
 ## API Design
 
 - Use Next.js Route Handlers (`app/api/`)

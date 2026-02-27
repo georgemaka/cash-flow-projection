@@ -40,7 +40,14 @@ interface MobileGroupProps {
   onCellChange?: (edit: PendingEdit) => void;
 }
 
-function MobileGroup({ group, periods, expandedItem, onToggle, canEdit, onCellChange }: MobileGroupProps) {
+function MobileGroup({
+  group,
+  periods,
+  expandedItem,
+  onToggle,
+  canEdit,
+  onCellChange
+}: MobileGroupProps) {
   return (
     <div className="cf-mobile-group">
       <div className="cf-mobile-group-header">
@@ -53,9 +60,7 @@ function MobileGroup({ group, periods, expandedItem, onToggle, canEdit, onCellCh
           row={row}
           periods={periods}
           expanded={expandedItem === row.lineItemId}
-          onToggle={() =>
-            onToggle(expandedItem === row.lineItemId ? null : row.lineItemId)
-          }
+          onToggle={() => onToggle(expandedItem === row.lineItemId ? null : row.lineItemId)}
           canEdit={canEdit}
           onCellChange={onCellChange}
         />
@@ -73,7 +78,14 @@ interface MobileItemCardProps {
   onCellChange?: (edit: PendingEdit) => void;
 }
 
-function MobileItemCard({ row, periods, expanded, onToggle, canEdit, onCellChange }: MobileItemCardProps) {
+function MobileItemCard({
+  row,
+  periods,
+  expanded,
+  onToggle,
+  canEdit,
+  onCellChange
+}: MobileItemCardProps) {
   const projTotal = periods.reduce((sum, p) => {
     const val = row.values[p]?.projected;
     return sum + (val ? parseFloat(val) : 0);
@@ -89,7 +101,12 @@ function MobileItemCard({ row, periods, expanded, onToggle, canEdit, onCellChang
       {expanded && (
         <div className="cf-mobile-card-body">
           {periods.map((p) => {
-            const cell = row.values[p] ?? { projected: null, actual: null, note: null, dirty: false };
+            const cell = row.values[p] ?? {
+              projected: null,
+              actual: null,
+              note: null,
+              dirty: false
+            };
             return (
               <MobileMonthRow
                 key={p}
@@ -117,7 +134,14 @@ interface MobileMonthRowProps {
   onCellChange?: (edit: PendingEdit) => void;
 }
 
-function MobileMonthRow({ period, lineItemId, projected, actual, canEdit, onCellChange }: MobileMonthRowProps) {
+function MobileMonthRow({
+  period,
+  lineItemId,
+  projected,
+  actual,
+  canEdit,
+  onCellChange
+}: MobileMonthRowProps) {
   const [editingField, setEditingField] = useState<"projected" | "actual" | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);

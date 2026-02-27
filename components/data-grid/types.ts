@@ -51,8 +51,18 @@ export interface PendingEdit {
 
 /** Month labels for display. */
 export const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
 ] as const;
 
 /** Format a YYYY-MM period string to a short label like "Jan 27". */

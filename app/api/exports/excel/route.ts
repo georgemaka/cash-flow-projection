@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateExcelExport } from "@/lib/exports";
 import type { ExportSnapshotData } from "@/lib/exports";
+import { requireSignedIn } from "@/lib/auth";
 
 /**
  * GET /api/exports/excel?snapshotId=xxx
@@ -10,6 +11,9 @@ import type { ExportSnapshotData } from "@/lib/exports";
  * since the full Prisma data assembly pipeline isn't built yet.
  */
 export async function POST(request: NextRequest) {
+  const guard = await requireSignedIn();
+  if (guard) return guard;
+
   try {
     const body = (await request.json()) as ExportSnapshotData;
 

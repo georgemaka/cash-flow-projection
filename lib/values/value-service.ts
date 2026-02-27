@@ -95,12 +95,11 @@ export class ValueService {
       return upserted;
     }
 
-    const changes = diffFields(existing as Record<string, unknown>, upserted as Record<string, unknown>, [
-      "projectedAmount",
-      "actualAmount",
-      "note",
-      "updatedBy"
-    ]);
+    const changes = diffFields(
+      existing as Record<string, unknown>,
+      upserted as Record<string, unknown>,
+      ["projectedAmount", "actualAmount", "note", "updatedBy"]
+    );
 
     await this.audit.logUpdate({
       userId: input.updatedBy,

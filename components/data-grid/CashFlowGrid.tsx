@@ -170,9 +170,7 @@ function LineItemRow({ row, periods, canEdit, viewMode, onCellChange }: LineItem
           </div>
         ) : (
           <span className="cf-grid-total-value">
-            {formatCurrency(
-              (viewMode === "projected" ? projTotal : actTotal).toFixed(2)
-            )}
+            {formatCurrency((viewMode === "projected" ? projTotal : actTotal).toFixed(2))}
           </span>
         )}
       </td>
@@ -270,10 +268,7 @@ function GridCell({
               formatCurrency(projected)
             )}
           </span>
-          <span
-            className="cf-grid-val cf-grid-val-act"
-            onDoubleClick={() => startEdit("actual")}
-          >
+          <span className="cf-grid-val cf-grid-val-act" onDoubleClick={() => startEdit("actual")}>
             {editing === "actual" ? (
               <input
                 ref={inputRef}
@@ -366,9 +361,7 @@ function SubtotalRow({ group, periods, viewMode }: SubtotalRowProps) {
                 </span>
               </div>
             ) : (
-              formatCurrency(
-                (viewMode === "projected" ? projSub : actSub).toFixed(2)
-              )
+              formatCurrency((viewMode === "projected" ? projSub : actSub).toFixed(2))
             )}
           </td>
         );
@@ -384,10 +377,7 @@ function SubtotalRow({ group, periods, viewMode }: SubtotalRowProps) {
           </div>
         ) : (
           formatCurrency(
-            (viewMode === "projected"
-              ? grandTotal("projected")
-              : grandTotal("actual")
-            ).toFixed(2)
+            (viewMode === "projected" ? grandTotal("projected") : grandTotal("actual")).toFixed(2)
           )
         )}
       </td>

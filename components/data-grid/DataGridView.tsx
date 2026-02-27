@@ -39,33 +39,39 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
   const handleCellChange = useCallback((edit: PendingEdit) => {
     // Optimistically update the grid data
     setGridData((prev) => {
-      const updated = { ...prev, groups: prev.groups.map((g) => ({
-        ...g,
-        rows: g.rows.map((r) => {
-          if (r.lineItemId !== edit.lineItemId) return r;
-          const cell = r.values[edit.period] ?? { projected: null, actual: null, note: null, dirty: false };
-          return {
-            ...r,
-            values: {
-              ...r.values,
-              [edit.period]: {
-                ...cell,
-                [edit.field]: edit.value,
-                dirty: true
+      const updated = {
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          rows: g.rows.map((r) => {
+            if (r.lineItemId !== edit.lineItemId) return r;
+            const cell = r.values[edit.period] ?? {
+              projected: null,
+              actual: null,
+              note: null,
+              dirty: false
+            };
+            return {
+              ...r,
+              values: {
+                ...r.values,
+                [edit.period]: {
+                  ...cell,
+                  [edit.field]: edit.value,
+                  dirty: true
+                }
               }
-            }
-          };
-        })
-      }))};
+            };
+          })
+        }))
+      };
       return updated;
     });
 
     // Track pending edit (dedup by lineItemId + period + field)
     setPendingEdits((prev) => {
       const key = `${edit.lineItemId}:${edit.period}:${edit.field}`;
-      const filtered = prev.filter(
-        (e) => `${e.lineItemId}:${e.period}:${e.field}` !== key
-      );
+      const filtered = prev.filter((e) => `${e.lineItemId}:${e.period}:${e.field}` !== key);
       return [...filtered, edit];
     });
   }, []);
@@ -123,9 +129,7 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
           </button>
         </div>
         <div className="cf-view-actions">
-          {isLocked && (
-            <span className="snapshot-chip locked">Locked</span>
-          )}
+          {isLocked && <span className="snapshot-chip locked">Locked</span>}
           {editable && !isLocked && (
             <button
               onClick={handleSave}
@@ -139,11 +143,7 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
       </div>
 
       {isMobile ? (
-        <MobileCardView
-          data={gridData}
-          editable={editable}
-          onCellChange={handleCellChange}
-        />
+        <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />
       ) : (
         <CashFlowGrid
           data={gridData}

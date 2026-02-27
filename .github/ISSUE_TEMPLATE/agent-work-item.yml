@@ -1,0 +1,68 @@
+name: Agent Work Item
+description: Create an implementation task for Claude/Codex with explicit review expectations.
+title: "[Work] "
+labels:
+  - phase-1
+  - ready-for-pr
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One clear paragraph describing the outcome to build.
+      placeholder: Build API endpoint for snapshot lock/unlock with role checks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Use a checklist with objective pass/fail criteria.
+      placeholder: |
+        - [ ] Endpoint exists and validates payload
+        - [ ] Only admin can lock/unlock snapshot
+        - [ ] Audit records are written
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_notes
+    attributes:
+      label: Implementation Notes
+      description: Constraints, architecture notes, or links to related issues/PRs.
+      placeholder: Reuse existing snapshot service and keep DB writes transactional.
+    validations:
+      required: false
+
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: Test Plan
+      description: What tests should be added or updated.
+      placeholder: |
+        - Unit: lock/unlock permission checks
+        - Integration: lock endpoint returns 403 for editor role
+    validations:
+      required: true
+
+  - type: dropdown
+    id: review_owner
+    attributes:
+      label: Cross-Review Owner
+      description: Which agent should perform review on the PR for this issue.
+      options:
+        - codex
+        - claude
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: coordination
+    attributes:
+      label: Coordination
+      options:
+        - label: I linked related docs/decisions and this issue is scoped enough for one PR.
+          required: true
+        - label: I will move this issue to `needs-review` before merge.
+          required: true

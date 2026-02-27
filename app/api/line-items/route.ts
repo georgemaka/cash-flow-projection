@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { createLineItem, listLineItems } from "../../../lib/line-items/http-handlers";
 import { lineItemService } from "../../../lib/line-items/service-factory";
+import { requireAdmin, requireSignedIn } from "@/lib/auth";
 
 export async function GET(request: Request) {
+  const guard = await requireSignedIn();
+  if (guard) return guard;
+
   const url = new URL(request.url);
   const groupId = url.searchParams.get("groupId") ?? undefined;
   const includeInactive = url.searchParams.get("includeInactive") === "true";
@@ -12,6 +16,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard) return guard;
+
   let body: unknown;
 
   try {

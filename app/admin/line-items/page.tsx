@@ -84,10 +84,7 @@ export default function LineItemsAdminPage() {
           {/* Line item manager */}
           <div className="card panel">
             {selectedGroup ? (
-              <LineItemManager
-                groupId={selectedGroup.id}
-                groupName={selectedGroup.name}
-              />
+              <LineItemManager groupId={selectedGroup.id} groupName={selectedGroup.name} />
             ) : (
               <p>Select a group to manage its line items.</p>
             )}
