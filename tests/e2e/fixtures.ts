@@ -34,9 +34,21 @@ export const MOCK_GROUPS = [
 ];
 
 export const MOCK_LINE_ITEMS = [
-  { id: "li-1", groupId: "g1", label: "Base Rent", projectionMethod: "annual_spread", sortOrder: 0 },
+  {
+    id: "li-1",
+    groupId: "g1",
+    label: "Base Rent",
+    projectionMethod: "annual_spread",
+    sortOrder: 0
+  },
   { id: "li-2", groupId: "g1", label: "Parking Revenue", projectionMethod: "manual", sortOrder: 1 },
-  { id: "li-3", groupId: "g2", label: "Utilities", projectionMethod: "prior_year_pct", sortOrder: 0 }
+  {
+    id: "li-3",
+    groupId: "g2",
+    label: "Utilities",
+    projectionMethod: "prior_year_pct",
+    sortOrder: 0
+  }
 ];
 
 export function generateMockValues(snapshotId: string) {
@@ -49,7 +61,8 @@ export function generateMockValues(snapshotId: string) {
         snapshotId,
         period,
         projectedAmount: li.id === "li-1" ? "10000.00" : li.id === "li-2" ? "500.00" : "1200.00",
-        actualAmount: m <= 3 ? (li.id === "li-1" ? "10500.00" : li.id === "li-2" ? "480.00" : "1150.00") : null,
+        actualAmount:
+          m <= 3 ? (li.id === "li-1" ? "10500.00" : li.id === "li-2" ? "480.00" : "1150.00") : null,
         note: null,
         lineItem: li
       });
@@ -89,7 +102,11 @@ export async function mockAllApis(page: Page, snapshotId = "snap-draft") {
         body: JSON.stringify(snap)
       });
     } else {
-      route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "Not found" }) });
+      route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Not found" })
+      });
     }
   });
 

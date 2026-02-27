@@ -135,8 +135,18 @@ export function SnapshotList() {
 function formatAsOfMonth(raw: string): string {
   const d = new Date(raw);
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
   ];
   return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }

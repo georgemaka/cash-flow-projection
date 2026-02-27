@@ -26,7 +26,9 @@ test.describe("data grid — draft snapshot", () => {
 
   test("renders snapshot name and status", async ({ page }) => {
     await page.goto("/snapshots/snap-draft");
-    await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({
+      timeout: 10_000
+    });
     await expect(page.getByText("Draft", { exact: false })).toBeVisible();
   });
 
@@ -35,7 +37,9 @@ test.describe("data grid — draft snapshot", () => {
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
     await expect(page.locator(".cf-grid-group-name", { hasText: "Rental Income" })).toBeVisible();
-    await expect(page.locator(".cf-grid-group-name", { hasText: "Operating Expenses" })).toBeVisible();
+    await expect(
+      page.locator(".cf-grid-group-name", { hasText: "Operating Expenses" })
+    ).toBeVisible();
   });
 
   test("renders line item labels", async ({ page }) => {
@@ -107,7 +111,9 @@ test.describe("data grid — locked snapshot", () => {
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(generateMockValues("snap-locked").filter(v => v.lineItem.id === "li-1"))
+        body: JSON.stringify(
+          generateMockValues("snap-locked").filter((v) => v.lineItem.id === "li-1")
+        )
       });
     });
   });

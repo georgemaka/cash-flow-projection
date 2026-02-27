@@ -149,7 +149,9 @@ export function BulkUpdatePanel({ snapshotId, groups, onClose, onSuccess }: Bulk
     <div className="bu-overlay">
       <div className="bu-panel" role="dialog" aria-modal="true" aria-labelledby="bu-panel-title">
         <div className="bu-panel-header">
-          <h3 className="bu-panel-title" id="bu-panel-title">Bulk Update</h3>
+          <h3 className="bu-panel-title" id="bu-panel-title">
+            Bulk Update
+          </h3>
           <button className="ghost-btn bu-close" onClick={onClose} type="button">
             &times;
           </button>

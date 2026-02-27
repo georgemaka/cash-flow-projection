@@ -202,7 +202,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sortOrder: items[idx].sortOrder, updatedBy: undefined })
-          }),
+          })
         ]);
         await fetchItems();
         toast("Line item reordered", "success");
@@ -358,7 +358,10 @@ function LineItemCard({
             onBlur={handleRenameSubmit}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleRenameSubmit();
-              if (e.key === "Escape") { setRenaming(false); setRenameValue(item.label); }
+              if (e.key === "Escape") {
+                setRenaming(false);
+                setRenameValue(item.label);
+              }
             }}
             autoFocus
           />
@@ -375,8 +378,26 @@ function LineItemCard({
       </div>
 
       <div className="li-card-actions">
-        <button className="admin-icon-btn" onClick={() => onMove("up")} disabled={index === 0} type="button" title="Move up" aria-label="Move up">&#9650;</button>
-        <button className="admin-icon-btn" onClick={() => onMove("down")} disabled={index === total - 1} type="button" title="Move down" aria-label="Move down">&#9660;</button>
+        <button
+          className="admin-icon-btn"
+          onClick={() => onMove("up")}
+          disabled={index === 0}
+          type="button"
+          title="Move up"
+          aria-label="Move up"
+        >
+          &#9650;
+        </button>
+        <button
+          className="admin-icon-btn"
+          onClick={() => onMove("down")}
+          disabled={index === total - 1}
+          type="button"
+          title="Move down"
+          aria-label="Move down"
+        >
+          &#9660;
+        </button>
         {otherGroups.length > 0 && (
           <select
             className="li-move-select"
@@ -388,7 +409,9 @@ function LineItemCard({
           >
             <option value="">Move to...</option>
             {otherGroups.map((g) => (
-              <option key={g.id} value={g.id}>{g.name}</option>
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
             ))}
           </select>
         )}
@@ -397,7 +420,9 @@ function LineItemCard({
         </button>
         <button
           className="danger"
-          onClick={() => { if (confirm(`Archive "${item.label}"?`)) onArchive(); }}
+          onClick={() => {
+            if (confirm(`Archive "${item.label}"?`)) onArchive();
+          }}
           type="button"
         >
           Archive

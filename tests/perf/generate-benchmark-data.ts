@@ -61,16 +61,58 @@ const GROUP_NAMES = [
 ];
 
 const LINE_ITEM_TEMPLATES: Record<string, string[]> = {
-  "Rental Income": ["Base Rent", "CAM Recoveries", "Percentage Rent", "Tenant Improvements", "Lease Termination Fees"],
-  "Parking Revenue": ["Monthly Parking", "Transient Parking", "Valet Revenue", "EV Charging", "Overflow Lot"],
+  "Rental Income": [
+    "Base Rent",
+    "CAM Recoveries",
+    "Percentage Rent",
+    "Tenant Improvements",
+    "Lease Termination Fees"
+  ],
+  "Parking Revenue": [
+    "Monthly Parking",
+    "Transient Parking",
+    "Valet Revenue",
+    "EV Charging",
+    "Overflow Lot"
+  ],
   "Operating Expenses": ["Payroll", "Janitorial", "Security", "Landscaping", "Pest Control"],
-  "Maintenance & Repairs": ["HVAC Service", "Plumbing", "Electrical", "Elevator Maintenance", "Roof Repairs"],
-  "Insurance": ["Property Insurance", "Liability Insurance", "Umbrella Policy", "Workers Comp", "Earthquake Rider"],
+  "Maintenance & Repairs": [
+    "HVAC Service",
+    "Plumbing",
+    "Electrical",
+    "Elevator Maintenance",
+    "Roof Repairs"
+  ],
+  Insurance: [
+    "Property Insurance",
+    "Liability Insurance",
+    "Umbrella Policy",
+    "Workers Comp",
+    "Earthquake Rider"
+  ],
   "Property Tax": ["County Tax", "City Tax", "Special Assessment", "School Bond", "Mello-Roos"],
-  "Utilities": ["Electric", "Water/Sewer", "Gas", "Trash Removal", "Internet/Telecom"],
-  "Management Fees": ["Property Management", "Asset Management", "Leasing Commission", "Legal Fees", "Accounting"],
-  "Capital Expenditures": ["Roof Replacement", "Parking Lot Resurfacing", "Lobby Renovation", "HVAC Replacement", "Elevator Modernization"],
-  "Non-Operating Items": ["Debt Service", "Interest Income", "Depreciation", "Loan Proceeds", "Capital Reserve Contribution"]
+  Utilities: ["Electric", "Water/Sewer", "Gas", "Trash Removal", "Internet/Telecom"],
+  "Management Fees": [
+    "Property Management",
+    "Asset Management",
+    "Leasing Commission",
+    "Legal Fees",
+    "Accounting"
+  ],
+  "Capital Expenditures": [
+    "Roof Replacement",
+    "Parking Lot Resurfacing",
+    "Lobby Renovation",
+    "HVAC Replacement",
+    "Elevator Modernization"
+  ],
+  "Non-Operating Items": [
+    "Debt Service",
+    "Interest Income",
+    "Depreciation",
+    "Loan Proceeds",
+    "Capital Reserve Contribution"
+  ]
 };
 
 const METHODS = ["manual", "annual_spread", "prior_year_pct", "prior_year_flat"];
@@ -113,11 +155,12 @@ export function generateBenchmarkData(year: number = 2026): {
     itemLabels.forEach((label, li) => {
       const lineItemId = `bench-li-${lineItemCounter++}`;
       const method = METHODS[li % METHODS.length];
-      const params = method === "annual_spread"
-        ? { annualTotal: String((50000 + Math.random() * 200000).toFixed(0)) }
-        : method === "prior_year_pct"
-          ? { pctChange: Math.round((Math.random() * 10 - 5) * 10) / 10 }
-          : {};
+      const params =
+        method === "annual_spread"
+          ? { annualTotal: String((50000 + Math.random() * 200000).toFixed(0)) }
+          : method === "prior_year_pct"
+            ? { pctChange: Math.round((Math.random() * 10 - 5) * 10) / 10 }
+            : {};
 
       lineItems.push({
         id: lineItemId,

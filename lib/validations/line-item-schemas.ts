@@ -24,10 +24,7 @@ const emptyParamsSchema = z.object({}).passthrough();
  * Validates projectionParams based on the projectionMethod.
  * Falls back to a permissive record if method is not provided (create defaults to manual).
  */
-export function validateProjectionParams(
-  method: string | undefined,
-  params: unknown
-): boolean {
+export function validateProjectionParams(method: string | undefined, params: unknown): boolean {
   if (params === null || params === undefined) return true;
   switch (method) {
     case "annual_spread":
@@ -54,10 +51,9 @@ export const createLineItemSchema = z
     sortOrder: z.number().int().min(0).optional(),
     createdBy: z.string().trim().optional()
   })
-  .refine(
-    (d) => validateProjectionParams(d.projectionMethod, d.projectionParams),
-    { message: "projectionParams invalid for the selected projectionMethod" }
-  );
+  .refine((d) => validateProjectionParams(d.projectionMethod, d.projectionParams), {
+    message: "projectionParams invalid for the selected projectionMethod"
+  });
 
 export const updateLineItemSchema = z
   .object({
@@ -79,10 +75,9 @@ export const updateLineItemSchema = z
       d.sortOrder !== undefined,
     { message: "No updatable fields provided" }
   )
-  .refine(
-    (d) => validateProjectionParams(d.projectionMethod, d.projectionParams),
-    { message: "projectionParams invalid for the selected projectionMethod" }
-  );
+  .refine((d) => validateProjectionParams(d.projectionMethod, d.projectionParams), {
+    message: "projectionParams invalid for the selected projectionMethod"
+  });
 
 export const archiveLineItemSchema = z.object({
   lineItemId: nonEmptyString,

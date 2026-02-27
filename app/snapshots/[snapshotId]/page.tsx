@@ -26,11 +26,11 @@ export default function SnapshotDataEntryPage() {
     <div className="dashboard-shell-wide">
       {/* Breadcrumb */}
       <nav className="breadcrumb">
-        <Link href="/" className="breadcrumb-link">Dashboard</Link>
+        <Link href="/" className="breadcrumb-link">
+          Dashboard
+        </Link>
         <span className="breadcrumb-sep">/</span>
-        <span className="breadcrumb-current">
-          {data ? data.snapshotName : "Snapshot"}
-        </span>
+        <span className="breadcrumb-current">{data ? data.snapshotName : "Snapshot"}</span>
       </nav>
 
       {data && (
@@ -46,11 +46,11 @@ export default function SnapshotDataEntryPage() {
                       : "detail-status-draft"
                   }`}
                 >
-                  {data.snapshotStatus === "locked" ? "\uD83D\uDD12 Locked \u2014 read only" : "\u270F\uFE0F Draft \u2014 editable"}
+                  {data.snapshotStatus === "locked"
+                    ? "\uD83D\uDD12 Locked \u2014 read only"
+                    : "\u270F\uFE0F Draft \u2014 editable"}
                 </span>
-                <span className="detail-meta-item">
-                  {data.periods.length} months
-                </span>
+                <span className="detail-meta-item">{data.periods.length} months</span>
                 <span className="detail-meta-item">
                   {data.groups.reduce((sum, g) => sum + g.rows.length, 0)} line items
                 </span>
@@ -61,7 +61,9 @@ export default function SnapshotDataEntryPage() {
       )}
 
       {loading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}
+        >
           <Skeleton width="30%" height="1.5rem" />
           <Skeleton width="100%" height="2.5rem" />
           <Skeleton width="100%" height="300px" borderRadius="14px" />
