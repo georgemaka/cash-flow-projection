@@ -52,3 +52,15 @@ This file tracks agreed decisions that agents should treat as defaults unless ex
   - p95 grid load (12 months): < 2 seconds
   - p95 save acknowledgment: < 400 ms
   - p95 Excel export generation: < 30 seconds (standard workbook size)
+
+## ADR-007
+
+- Date: 2026-02-27
+- Owner: Project Owner + AI Agents
+- Status: accepted
+- Context: Auth roles (admin/editor/viewer) are enforced by API guards. In local dev, `DEV_AUTH_BYPASS=true` grants admin. In production, each user needs their Clerk `publicMetadata.role` set explicitly — otherwise they default to "viewer" and cannot write.
+- Decision: Before production launch, configure Clerk Dashboard roles for all admin/editor users. Checklist:
+  1. In Clerk Dashboard → Users → select user → publicMetadata → set `{ "role": "admin" }` or `"editor"`
+  2. Ensure `DEV_AUTH_BYPASS` is `false` (or absent) in Vercel production env vars
+  3. Verify admin operations (group CRUD, line item CRUD, snapshot lock/unlock) work for admin users
+  4. Verify viewers get read-only access (403 on write endpoints)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import {
   ProjectionStrategyPicker,
   type ProjectionConfig,
@@ -36,6 +37,7 @@ interface LineItemManagerProps {
  */
 export function LineItemManager({ groupId, groupName, allGroups }: LineItemManagerProps) {
   const [items, setItems] = useState<LineItem[]>([]);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -97,12 +99,13 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
       setNewLabel("");
       setNewConfig({ method: "manual", params: {} });
       await fetchItems();
+      toast("Line item created", "success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setCreating(false);
     }
-  }, [groupId, newLabel, newConfig, items, fetchItems]);
+  }, [groupId, newLabel, newConfig, items, fetchItems, toast]);
 
   const handleArchive = useCallback(
     async (itemId: string) => {
@@ -120,11 +123,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
         }
 
         await fetchItems();
+        toast("Line item archived", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [fetchItems]
+    [fetchItems, toast]
   );
 
   const handleUpdateProjection = useCallback(
@@ -148,11 +152,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
 
         setEditingId(null);
         await fetchItems();
+        toast("Projection updated", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [fetchItems]
+    [fetchItems, toast]
   );
 
   const handleRename = useCallback(
@@ -170,11 +175,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           throw new Error(body.error ?? "Failed to rename");
         }
         await fetchItems();
+        toast("Line item renamed", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [fetchItems]
+    [fetchItems, toast]
   );
 
   const handleMove = useCallback(
@@ -199,11 +205,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           }),
         ]);
         await fetchItems();
+        toast("Line item reordered", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [items, fetchItems]
+    [items, fetchItems, toast]
   );
 
   const handleMoveToGroup = useCallback(
@@ -220,11 +227,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           throw new Error(body.error ?? "Failed to move");
         }
         await fetchItems();
+        toast("Moved to group", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [fetchItems]
+    [fetchItems, toast]
   );
 
   if (loading) return <p>Loading line items...</p>;

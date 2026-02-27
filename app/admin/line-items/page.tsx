@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { LineItemManager } from "@/components/line-items";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import "@/components/line-items/line-items.css";
 
 interface Group {
@@ -20,6 +21,7 @@ const GROUP_TYPE_OPTIONS = [
 ];
 
 export default function LineItemsAdminPage() {
+  const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,13 @@ export default function LineItemsAdminPage() {
       setNewGroupType("sector");
       setShowCreateForm(false);
       await fetchGroups();
+      toast("Group created", "success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setCreating(false);
     }
-  }, [newGroupName, newGroupType, groups, fetchGroups]);
+  }, [newGroupName, newGroupType, groups, fetchGroups, toast]);
 
   const handleEditGroup = useCallback(
     async (groupId: string) => {
@@ -115,11 +118,12 @@ export default function LineItemsAdminPage() {
         }
         setEditingGroupId(null);
         await fetchGroups();
+        toast("Group updated", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [editGroupName, editGroupType, fetchGroups]
+    [editGroupName, editGroupType, fetchGroups, toast]
   );
 
   const handleArchiveGroup = useCallback(
@@ -137,11 +141,12 @@ export default function LineItemsAdminPage() {
         }
         if (selectedGroupId === groupId) setSelectedGroupId(null);
         await fetchGroups();
+        toast("Group archived", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [selectedGroupId, fetchGroups]
+    [selectedGroupId, fetchGroups, toast]
   );
 
   const handleMoveGroup = useCallback(
@@ -167,11 +172,12 @@ export default function LineItemsAdminPage() {
           }),
         ]);
         await fetchGroups();
+        toast("Group reordered", "success");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     },
-    [groups, fetchGroups]
+    [groups, fetchGroups, toast]
   );
 
   const startEditGroup = (g: Group) => {
