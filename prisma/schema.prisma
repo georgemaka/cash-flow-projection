@@ -125,6 +125,7 @@ model Value {
   updater         User?     @relation("ValueUpdatedBy", fields: [updatedBy], references: [id], onDelete: Restrict)
 
   @@unique([lineItemId, snapshotId, period])
+  @@index([snapshotId, period])
 }
 
 model AuditLog {
