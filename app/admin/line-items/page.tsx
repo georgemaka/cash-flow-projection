@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LineItemManager } from "@/components/line-items";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 import "@/components/line-items/line-items.css";
 
 interface Group {
@@ -49,31 +50,43 @@ export default function LineItemsAdminPage() {
         </p>
       </div>
 
-      {loading && <p>Loading groups...</p>}
       {error && (
         <div className="error-banner">
           <p>{error}</p>
         </div>
       )}
 
+      {loading && (
+        <div className="grid-layout">
+          <div className="card panel">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <div className="card panel">
+            <SkeletonCard />
+          </div>
+        </div>
+      )}
+
       {!loading && groups.length > 0 && (
         <div className="grid-layout">
-          {/* Group selector sidebar */}
+          {/* Group sidebar */}
           <div className="card panel">
             <div className="panel-head">
               <h2>Groups</h2>
+              <p>{groups.length} total</p>
             </div>
-            <div className="list-stack">
+            <div className="admin-sidebar">
               {groups.map((g) => (
                 <button
                   key={g.id}
-                  className={`row-card${g.id === selectedGroupId ? " selected" : ""}`}
+                  className={`admin-sidebar-item${g.id === selectedGroupId ? " admin-sidebar-item-active" : ""}`}
                   onClick={() => setSelectedGroupId(g.id)}
                   type="button"
-                  style={{ cursor: "pointer", textAlign: "left" }}
                 >
-                  <span style={{ fontWeight: 600 }}>{g.name}</span>
-                  <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
+                  <span>{g.name}</span>
+                  <span className="admin-sidebar-type">
                     {g.groupType.replace("_", " ")}
                   </span>
                 </button>
@@ -86,7 +99,9 @@ export default function LineItemsAdminPage() {
             {selectedGroup ? (
               <LineItemManager groupId={selectedGroup.id} groupName={selectedGroup.name} />
             ) : (
-              <p>Select a group to manage its line items.</p>
+              <div className="cf-empty-state">
+                <p>Select a group to manage its line items.</p>
+              </div>
             )}
           </div>
         </div>
@@ -94,6 +109,7 @@ export default function LineItemsAdminPage() {
 
       {!loading && groups.length === 0 && (
         <div className="cf-empty-state">
+          <div className="cf-empty-icon">&#128193;</div>
           <p>No groups yet. Create groups first before adding line items.</p>
         </div>
       )}

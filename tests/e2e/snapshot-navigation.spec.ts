@@ -42,11 +42,12 @@ test.describe("snapshot list navigation", () => {
     await expect(page.getByText("Compare two snapshots")).toBeVisible();
   });
 
-  test("back button on detail page returns to home", async ({ page }) => {
+  test("breadcrumb on detail page navigates to home", async ({ page }) => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
-    await page.getByText("Back").click();
+    // Breadcrumb "Dashboard" link replaces the old back button
+    await page.locator(".breadcrumb-link").first().click();
     await page.waitForURL("/");
   });
 });

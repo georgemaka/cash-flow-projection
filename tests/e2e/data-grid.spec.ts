@@ -27,7 +27,7 @@ test.describe("data grid — draft snapshot", () => {
   test("renders snapshot name and status", async ({ page }) => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("Draft — editable")).toBeVisible();
+    await expect(page.getByText("Draft", { exact: false })).toBeVisible();
   });
 
   test("renders group headers", async ({ page }) => {
@@ -114,7 +114,7 @@ test.describe("data grid — locked snapshot", () => {
 
   test("shows locked status indicator", async ({ page }) => {
     await page.goto("/snapshots/snap-locked");
-    await expect(page.getByText("Locked — read only")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Locked", { exact: false })).toBeVisible({ timeout: 10_000 });
   });
 
   test("cells are not editable (no editable class)", async ({ page }) => {

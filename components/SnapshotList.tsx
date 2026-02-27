@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 
 interface Snapshot {
   id: string;
@@ -26,8 +27,8 @@ export function SnapshotList() {
       try {
         const res = await fetch("/api/snapshots");
         if (!res.ok) throw new Error("Failed to fetch snapshots");
-        const data = await res.json();
-        setSnapshots(data);
+        const json = await res.json();
+        setSnapshots(json.data ?? json);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -37,16 +38,27 @@ export function SnapshotList() {
     fetchSnapshots();
   }, []);
 
-  if (loading) return <p>Loading snapshots...</p>;
-  if (error)
+  if (loading) {
+    return (
+      <div className="list-stack">
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="error-banner">
         <p>{error}</p>
       </div>
     );
+  }
+
   if (snapshots.length === 0) {
     return (
       <div className="cf-empty-state">
+        <div className="cf-empty-icon">&#128203;</div>
         <p>No snapshots yet. Create your first snapshot to get started.</p>
       </div>
     );
@@ -79,8 +91,8 @@ export function SnapshotList() {
         >
           {compareMode
             ? compareA
-              ? "Pick second snapshot…"
-              : "Pick first snapshot…"
+              ? "Pick second snapshot\u2026"
+              : "Pick first snapshot\u2026"
             : "Compare two snapshots"}
         </button>
         {compareMode && (
@@ -123,18 +135,8 @@ export function SnapshotList() {
 function formatAsOfMonth(raw: string): string {
   const d = new Date(raw);
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
   return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
