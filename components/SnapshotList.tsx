@@ -18,6 +18,8 @@ export function SnapshotList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareA, setCompareA] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSnapshots() {
@@ -50,22 +52,67 @@ export function SnapshotList() {
     );
   }
 
+  const handleSnapshotClick = (id: string) => {
+    if (!compareMode) {
+      router.push(`/snapshots/${id}`);
+      return;
+    }
+    if (!compareA) {
+      setCompareA(id);
+    } else if (compareA !== id) {
+      router.push(`/snapshots/compare?a=${compareA}&b=${id}`);
+      setCompareMode(false);
+      setCompareA(null);
+    }
+  };
+
   return (
     <div className="list-stack">
+      <div className="snapshot-list-toolbar">
+        <button
+          className={`ghost-btn${compareMode ? " snapshot-compare-active" : ""}`}
+          onClick={() => {
+            setCompareMode((m) => !m);
+            setCompareA(null);
+          }}
+          type="button"
+        >
+          {compareMode
+            ? compareA
+              ? "Pick second snapshot…"
+              : "Pick first snapshot…"
+            : "Compare two snapshots"}
+        </button>
+        {compareMode && (
+          <button
+            className="ghost-btn"
+            onClick={() => {
+              setCompareMode(false);
+              setCompareA(null);
+            }}
+            type="button"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       {snapshots.map((s) => {
         const asOf = formatAsOfMonth(s.asOfMonth);
+        const isSelectedA = compareA === s.id;
         return (
           <button
             key={s.id}
-            className="snapshot-row"
-            onClick={() => router.push(`/snapshots/${s.id}`)}
+            className={`snapshot-row${isSelectedA ? " snapshot-row-selected" : ""}`}
+            onClick={() => handleSnapshotClick(s.id)}
             type="button"
           >
             <span className={`snapshot-chip ${s.status}`}>{s.status}</span>
             <span className="snapshot-name">{s.name}</span>
             <span className="snapshot-month">{asOf}</span>
             <span className="snapshot-month">{new Date(s.createdAt).toLocaleDateString()}</span>
-            <span className="ghost-btn">Open</span>
+            <span className="ghost-btn">
+              {compareMode ? (isSelectedA ? "Selected A" : "Select") : "Open"}
+            </span>
           </button>
         );
       })}

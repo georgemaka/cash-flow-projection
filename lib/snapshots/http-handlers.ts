@@ -4,6 +4,7 @@ import type {
   LockSnapshotInput,
   UnlockSnapshotInput
 } from "./types";
+import type { SnapshotCompareResult } from "./compare-service";
 
 type HandlerResult = {
   status: number;
@@ -17,6 +18,10 @@ type SnapshotServiceLike = {
   lock: (input: LockSnapshotInput) => Promise<unknown>;
   unlock: (input: UnlockSnapshotInput) => Promise<unknown>;
   copyFromPrior: (input: CopySnapshotInput) => Promise<unknown>;
+};
+
+type CompareServiceLike = {
+  compare: (snapshotAId: string, snapshotBId: string) => Promise<SnapshotCompareResult>;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -202,5 +207,31 @@ export async function copySnapshot(
       return { status: 409, body: { error: message } };
     }
     return { status: 500, body: { error: "Failed to copy snapshot" } };
+  }
+}
+
+export async function compareSnapshots(
+  service: CompareServiceLike,
+  snapshotAId: string | null,
+  snapshotBId: string | null
+): Promise<HandlerResult> {
+  if (!snapshotAId || snapshotAId.trim().length === 0) {
+    return { status: 400, body: { error: "snapshotAId (query param 'a') is required" } };
+  }
+  if (!snapshotBId || snapshotBId.trim().length === 0) {
+    return { status: 400, body: { error: "snapshotBId (query param 'b') is required" } };
+  }
+  if (snapshotAId === snapshotBId) {
+    return { status: 400, body: { error: "Snapshots must be different" } };
+  }
+
+  try {
+    const data = await service.compare(snapshotAId, snapshotBId);
+    return { status: 200, body: { data } };
+  } catch (error) {
+    if (isNotFound(error)) {
+      return { status: 404, body: { error: "One or both snapshots not found" } };
+    }
+    return { status: 500, body: { error: "Failed to compare snapshots" } };
   }
 }

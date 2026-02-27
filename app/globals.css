@@ -259,6 +259,23 @@ select {
   color: var(--muted);
 }
 
+.snapshot-list-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.snapshot-compare-active {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.snapshot-row-selected {
+  border-color: var(--primary) !important;
+  background: #e8f0ff !important;
+}
+
 .value-entry-section {
   margin-top: 1rem;
 }
