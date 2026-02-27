@@ -85,7 +85,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           projectionMethod: newConfig.method,
           projectionParams: newConfig.params,
           sortOrder: maxSort + 1,
-          createdBy: null
+          createdBy: undefined
         })
       });
 
@@ -111,7 +111,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
         const res = await fetch(`/api/line-items/${itemId}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ archivedBy: null })
+          body: JSON.stringify({ archivedBy: undefined })
         });
 
         if (!res.ok) {
@@ -137,7 +137,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           body: JSON.stringify({
             projectionMethod: config.method,
             projectionParams: config.params,
-            updatedBy: null
+            updatedBy: undefined
           })
         });
 
@@ -163,7 +163,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
         const res = await fetch(`/api/line-items/${itemId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ label: newName.trim(), updatedBy: null })
+          body: JSON.stringify({ label: newName.trim(), updatedBy: undefined })
         });
         if (!res.ok) {
           const body = await res.json();
@@ -190,12 +190,12 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
           fetch(`/api/line-items/${items[idx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: items[swapIdx].sortOrder, updatedBy: null })
+            body: JSON.stringify({ sortOrder: items[swapIdx].sortOrder, updatedBy: undefined })
           }),
           fetch(`/api/line-items/${items[swapIdx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: items[idx].sortOrder, updatedBy: null })
+            body: JSON.stringify({ sortOrder: items[idx].sortOrder, updatedBy: undefined })
           }),
         ]);
         await fetchItems();
@@ -213,7 +213,7 @@ export function LineItemManager({ groupId, groupName, allGroups }: LineItemManag
         const res = await fetch(`/api/line-items/${itemId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ groupId: targetGroupId, updatedBy: null })
+          body: JSON.stringify({ groupId: targetGroupId, updatedBy: undefined })
         });
         if (!res.ok) {
           const body = await res.json();

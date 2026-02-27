@@ -77,7 +77,7 @@ export default function LineItemsAdminPage() {
           name: newGroupName.trim(),
           groupType: newGroupType,
           sortOrder: maxSort + 1,
-          createdBy: null,
+          createdBy: undefined,
         }),
       });
       if (!res.ok) {
@@ -106,7 +106,7 @@ export default function LineItemsAdminPage() {
           body: JSON.stringify({
             name: editGroupName.trim(),
             groupType: editGroupType,
-            updatedBy: null,
+            updatedBy: undefined,
           }),
         });
         if (!res.ok) {
@@ -129,7 +129,7 @@ export default function LineItemsAdminPage() {
         const res = await fetch(`/api/groups/${groupId}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ archivedBy: null }),
+          body: JSON.stringify({ archivedBy: undefined }),
         });
         if (!res.ok) {
           const body = await res.json();
@@ -158,12 +158,12 @@ export default function LineItemsAdminPage() {
           fetch(`/api/groups/${active[idx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: active[swapIdx].sortOrder, updatedBy: null }),
+            body: JSON.stringify({ sortOrder: active[swapIdx].sortOrder, updatedBy: undefined }),
           }),
           fetch(`/api/groups/${active[swapIdx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: active[idx].sortOrder, updatedBy: null }),
+            body: JSON.stringify({ sortOrder: active[idx].sortOrder, updatedBy: undefined }),
           }),
         ]);
         await fetchGroups();
