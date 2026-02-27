@@ -64,7 +64,13 @@ export async function handleBulkUpdate(
       updatedBy ?? null
     );
     return { status: 200, body: { data } };
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "Cannot apply bulk updates to a locked snapshot"
+    ) {
+      return { status: 409, body: { error: error.message } };
+    }
     return { status: 500, body: { error: "Bulk update failed" } };
   }
 }
@@ -89,7 +95,10 @@ export async function handleBulkRestore(
   try {
     const data = await service.restore(snapshotId, normalizedRestores, reason, updatedBy ?? null);
     return { status: 200, body: { data } };
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === "Cannot restore values in a locked snapshot") {
+      return { status: 409, body: { error: error.message } };
+    }
     return { status: 500, body: { error: "Bulk restore failed" } };
   }
 }

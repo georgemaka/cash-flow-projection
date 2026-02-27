@@ -121,6 +121,20 @@ describe("POST /api/values/upsert", () => {
     expect(body.field).toBe("projectedAmount");
   });
 
+  it("returns 409 when snapshot is locked", async () => {
+    (valueService.upsert as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("Cannot edit values in a locked snapshot")
+    );
+    const req = makeRequest("http://localhost/api/values/upsert", {
+      lineItemId: "li-1",
+      snapshotId: "snap-locked",
+      period: "2026-01",
+      projectedAmount: "1000.00"
+    });
+    const res = await upsertValueRoute(req);
+    expect(res.status).toBe(409);
+  });
+
   it("returns 400 for invalid JSON body", async () => {
     const req = new Request("http://localhost/api/values/upsert", {
       method: "POST",
@@ -244,6 +258,21 @@ describe("POST /api/values/bulk-update", () => {
     expect(res.status).toBe(401);
   });
 
+  it("returns 409 when snapshot is locked", async () => {
+    (bulkValueService.apply as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("Cannot apply bulk updates to a locked snapshot")
+    );
+    const req = makeRequest("http://localhost/api/values/bulk-update", {
+      snapshotId: "snap-locked",
+      field: "projected",
+      operation: "multiply",
+      operand: 1.05,
+      reason: "Annual increase"
+    });
+    const res = await bulkUpdateRoute(req);
+    expect(res.status).toBe(409);
+  });
+
   it("returns 500 on service error", async () => {
     (bulkValueService.apply as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("DB down"));
     const req = makeRequest("http://localhost/api/values/bulk-update", {
@@ -319,6 +348,19 @@ describe("POST /api/values/bulk-restore", () => {
     });
     const res = await bulkRestoreRoute(req);
     expect(res.status).toBe(401);
+  });
+
+  it("returns 409 when snapshot is locked", async () => {
+    (bulkValueService.restore as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error("Cannot restore values in a locked snapshot")
+    );
+    const req = makeRequest("http://localhost/api/values/bulk-restore", {
+      snapshotId: "snap-locked",
+      reason: "Revert",
+      restores: [{ lineItemId: "li-1", period: "2026-01", projectedAmount: "1000.00" }]
+    });
+    const res = await bulkRestoreRoute(req);
+    expect(res.status).toBe(409);
   });
 
   it("returns 500 on service error", async () => {

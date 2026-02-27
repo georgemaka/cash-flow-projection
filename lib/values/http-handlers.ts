@@ -64,6 +64,9 @@ export async function upsertValue(
         }
       };
     }
+    if (error instanceof Error && error.message === "Cannot edit values in a locked snapshot") {
+      return { status: 409, body: { error: error.message } };
+    }
     return { status: 500, body: { error: "Failed to upsert value" } };
   }
 }
