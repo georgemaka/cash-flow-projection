@@ -116,7 +116,7 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
               projectedAmount: edit.projected !== undefined ? edit.projected : undefined,
               actualAmount: edit.actual !== undefined ? edit.actual : undefined,
               note: edit.note !== undefined ? edit.note : undefined,
-              updatedBy: null, // Will be set by auth context when available
+              updatedBy: undefined, // Will be set by auth context when available
               ...(reason ? { reason } : {})
             })
           });
