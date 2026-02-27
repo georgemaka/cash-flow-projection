@@ -1,5 +1,6 @@
 import type { BulkField, BulkOperation } from "./bulk-service";
 import { bulkUpdateSchema, bulkRestoreSchema, firstZodError } from "@/lib/validations";
+import { LockedSnapshotError } from "@/lib/errors";
 
 type HandlerResult = {
   status: number;
@@ -65,10 +66,7 @@ export async function handleBulkUpdate(
     );
     return { status: 200, body: { data } };
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "Cannot apply bulk updates to a locked snapshot"
-    ) {
+    if (error instanceof LockedSnapshotError) {
       return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Bulk update failed" } };
@@ -96,7 +94,7 @@ export async function handleBulkRestore(
     const data = await service.restore(snapshotId, normalizedRestores, reason, updatedBy ?? null);
     return { status: 200, body: { data } };
   } catch (error) {
-    if (error instanceof Error && error.message === "Cannot restore values in a locked snapshot") {
+    if (error instanceof LockedSnapshotError) {
       return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Bulk restore failed" } };

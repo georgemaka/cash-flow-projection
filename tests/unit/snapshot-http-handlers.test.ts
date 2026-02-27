@@ -7,6 +7,12 @@ import {
   lockSnapshot,
   unlockSnapshot
 } from "../../lib/snapshots/http-handlers";
+import {
+  AlreadyLockedError,
+  AlreadyUnlockedError,
+  NotFoundError,
+  SourceNotLockedError
+} from "../../lib/errors";
 
 function createMockService() {
   return {
@@ -43,7 +49,7 @@ describe("snapshot HTTP handlers", () => {
   });
 
   it("returns 404 when snapshot is not found", async () => {
-    mockService.getById.mockRejectedValueOnce(new Error("No Snapshot found"));
+    mockService.getById.mockRejectedValueOnce(new NotFoundError("Snapshot not found: missing"));
 
     const result = await getSnapshot(mockService, "missing");
 
@@ -93,7 +99,7 @@ describe("snapshot HTTP handlers", () => {
   });
 
   it("returns 409 if snapshot is already locked", async () => {
-    mockService.lock.mockRejectedValueOnce(new Error("Snapshot is already locked"));
+    mockService.lock.mockRejectedValueOnce(new AlreadyLockedError());
 
     const result = await lockSnapshot(mockService, {
       snapshotId: "snap-1",
@@ -120,7 +126,7 @@ describe("snapshot HTTP handlers", () => {
   });
 
   it("returns 409 if snapshot is already unlocked", async () => {
-    mockService.unlock.mockRejectedValueOnce(new Error("Snapshot is already unlocked"));
+    mockService.unlock.mockRejectedValueOnce(new AlreadyUnlockedError());
 
     const result = await unlockSnapshot(mockService, {
       snapshotId: "snap-1",
@@ -146,9 +152,7 @@ describe("snapshot HTTP handlers", () => {
   });
 
   it("returns 409 if copy source snapshot is not locked", async () => {
-    mockService.copyFromPrior.mockRejectedValueOnce(
-      new Error("Can only copy from a locked snapshot")
-    );
+    mockService.copyFromPrior.mockRejectedValueOnce(new SourceNotLockedError());
 
     const result = await copySnapshot(mockService, {
       sourceSnapshotId: "snap-draft",

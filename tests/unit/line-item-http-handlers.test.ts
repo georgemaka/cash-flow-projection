@@ -6,6 +6,7 @@ import {
   listLineItems,
   updateLineItem
 } from "../../lib/line-items/http-handlers";
+import { AlreadyArchivedError, NotFoundError } from "../../lib/errors";
 
 function createMockService() {
   return {
@@ -41,7 +42,7 @@ describe("line item HTTP handlers", () => {
   });
 
   it("returns 404 when line item is not found", async () => {
-    mockService.getById.mockRejectedValueOnce(new Error("No LineItem found"));
+    mockService.getById.mockRejectedValueOnce(new NotFoundError("Line item not found: missing"));
 
     const result = await getLineItem(mockService, "missing");
 
@@ -122,7 +123,9 @@ describe("line item HTTP handlers", () => {
   });
 
   it("returns 409 when line item is already archived", async () => {
-    mockService.archive.mockRejectedValueOnce(new Error("Line item is already archived"));
+    mockService.archive.mockRejectedValueOnce(
+      new AlreadyArchivedError("Line item is already archived")
+    );
 
     const result = await archiveLineItem(mockService, {
       lineItemId: "li-1",

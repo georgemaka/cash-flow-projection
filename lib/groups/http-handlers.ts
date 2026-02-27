@@ -5,6 +5,7 @@ import {
   archiveGroupSchema,
   firstZodError
 } from "@/lib/validations";
+import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
 
 type HandlerResult = {
   status: number;
@@ -18,16 +19,6 @@ type GroupServiceLike = {
   update: (input: UpdateGroupInput) => Promise<unknown>;
   archive: (input: ArchiveGroupInput) => Promise<unknown>;
 };
-
-function asErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  return "Unexpected error";
-}
-
-function isNotFound(error: unknown): boolean {
-  const message = asErrorMessage(error).toLowerCase();
-  return message.includes("not found") || (message.includes("no") && message.includes("found"));
-}
 
 export async function listGroups(
   service: GroupServiceLike,
@@ -50,7 +41,7 @@ export async function getGroup(service: GroupServiceLike, groupId: string): Prom
     const data = await service.getById(groupId);
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Group not found" } };
     }
     return { status: 500, body: { error: "Failed to fetch group" } };
@@ -95,7 +86,7 @@ export async function updateGroup(
     });
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Group not found" } };
     }
     return { status: 500, body: { error: "Failed to update group" } };
@@ -116,12 +107,11 @@ export async function archiveGroup(
     const data = await service.archive({ groupId, archivedBy: archivedBy ?? null, reason });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Group not found" } };
     }
-    if (message.includes("already archived")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof AlreadyArchivedError) {
+      return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to archive group" } };
   }

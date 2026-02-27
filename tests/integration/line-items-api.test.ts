@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
 
 vi.mock("@/lib/auth", () => ({
   requireSignedIn: vi.fn(),
@@ -200,7 +201,7 @@ describe("GET /api/line-items/[lineItemId]", () => {
 
   it("returns 404 when line item not found", async () => {
     (lineItemService.getById as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("No LineItem found")
+      new NotFoundError("Line item not found: missing")
     );
     const req = makeRequest("GET", "http://localhost/api/line-items/missing");
     const res = await getLineItemRoute(req, makeParams("missing"));
@@ -276,7 +277,7 @@ describe("DELETE /api/line-items/[lineItemId]", () => {
 
   it("returns 409 when already archived", async () => {
     (lineItemService.archive as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Line item is already archived")
+      new AlreadyArchivedError("Line item is already archived")
     );
     const req = makeRequest("DELETE", "http://localhost/api/line-items/li-1", {
       archivedBy: "admin-1"

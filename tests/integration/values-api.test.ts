@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 import { MaterialChangeRequiredError } from "@/lib/values/threshold";
+import { LockedSnapshotError } from "@/lib/errors";
 
 vi.mock("@/lib/auth", () => ({
   requireSignedIn: vi.fn(),
@@ -123,7 +124,7 @@ describe("POST /api/values/upsert", () => {
 
   it("returns 409 when snapshot is locked", async () => {
     (valueService.upsert as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Cannot edit values in a locked snapshot")
+      new LockedSnapshotError("Cannot edit values in a locked snapshot")
     );
     const req = makeRequest("http://localhost/api/values/upsert", {
       lineItemId: "li-1",
@@ -260,7 +261,7 @@ describe("POST /api/values/bulk-update", () => {
 
   it("returns 409 when snapshot is locked", async () => {
     (bulkValueService.apply as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Cannot apply bulk updates to a locked snapshot")
+      new LockedSnapshotError("Cannot apply bulk updates to a locked snapshot")
     );
     const req = makeRequest("http://localhost/api/values/bulk-update", {
       snapshotId: "snap-locked",
@@ -352,7 +353,7 @@ describe("POST /api/values/bulk-restore", () => {
 
   it("returns 409 when snapshot is locked", async () => {
     (bulkValueService.restore as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Cannot restore values in a locked snapshot")
+      new LockedSnapshotError("Cannot restore values in a locked snapshot")
     );
     const req = makeRequest("http://localhost/api/values/bulk-restore", {
       snapshotId: "snap-locked",

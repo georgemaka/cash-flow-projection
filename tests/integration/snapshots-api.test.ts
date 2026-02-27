@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { AlreadyLockedError, AlreadyUnlockedError, SourceNotLockedError } from "@/lib/errors";
 
 vi.mock("@/lib/auth", () => ({
   requireSignedIn: vi.fn(),
@@ -171,9 +172,7 @@ describe("POST /api/snapshots/lock", () => {
   });
 
   it("returns 409 when snapshot already locked", async () => {
-    (snapshotService.lock as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Snapshot is already locked")
-    );
+    (snapshotService.lock as ReturnType<typeof vi.fn>).mockRejectedValue(new AlreadyLockedError());
     const req = makeRequest("POST", { snapshotId: "s1", lockedBy: "admin-1" });
     const res = await lockSnapshotRoute(req);
     expect(res.status).toBe(409);
@@ -206,7 +205,7 @@ describe("POST /api/snapshots/unlock", () => {
 
   it("returns 409 when snapshot already draft", async () => {
     (snapshotService.unlock as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Snapshot is already unlocked")
+      new AlreadyUnlockedError()
     );
     const req = makeRequest("POST", { snapshotId: "s1", unlockedBy: "admin-1" });
     const res = await unlockSnapshotRoute(req);
@@ -246,7 +245,7 @@ describe("POST /api/snapshots/copy", () => {
 
   it("returns 409 when source is not locked", async () => {
     (snapshotService.copyFromPrior as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("Can only copy from a locked snapshot")
+      new SourceNotLockedError()
     );
     const req = makeRequest("POST", {
       sourceSnapshotId: "s1",

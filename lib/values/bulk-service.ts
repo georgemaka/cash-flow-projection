@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import type { PrismaClient } from "@prisma/client";
+import { LockedSnapshotError } from "@/lib/errors";
 
 type TxClient = Omit<
   PrismaClient,
@@ -80,7 +81,7 @@ export class BulkValueService {
       select: { status: true }
     });
     if (snap.status === "locked") {
-      throw new Error("Cannot apply bulk updates to a locked snapshot");
+      throw new LockedSnapshotError("Cannot apply bulk updates to a locked snapshot");
     }
 
     const values = await this.fetchValues(snapshotId, groupId);
@@ -142,7 +143,7 @@ export class BulkValueService {
       select: { status: true }
     });
     if (snap.status === "locked") {
-      throw new Error("Cannot restore values in a locked snapshot");
+      throw new LockedSnapshotError("Cannot restore values in a locked snapshot");
     }
 
     await this.prisma.$transaction(async (tx: TxClient) => {

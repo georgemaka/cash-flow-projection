@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient, Prisma } from "@prisma/client";
+import { NotFoundError } from "@/lib/errors";
 
 export interface CompareCellData {
   aProjected: string | null;
@@ -58,6 +59,18 @@ export class CompareService {
   constructor(private prisma: PrismaClient) {}
 
   async compare(snapshotAId: string, snapshotBId: string): Promise<SnapshotCompareResult> {
+    try {
+      await Promise.all([
+        this.prisma.snapshot.findUniqueOrThrow({ where: { id: snapshotAId } }),
+        this.prisma.snapshot.findUniqueOrThrow({ where: { id: snapshotBId } })
+      ]);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        throw new NotFoundError("One or both snapshots not found");
+      }
+      throw e;
+    }
+
     const [snapA, snapB, valuesA, valuesB, groups] = await Promise.all([
       this.prisma.snapshot.findUniqueOrThrow({ where: { id: snapshotAId } }),
       this.prisma.snapshot.findUniqueOrThrow({ where: { id: snapshotBId } }),
