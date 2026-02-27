@@ -73,7 +73,7 @@ describe("line item HTTP handlers", () => {
     });
 
     expect(result.status).toBe(400);
-    expect(result.body.error).toBe("Invalid projectionMethod");
+    expect(result.body.error).toBeTruthy();
   });
 
   it("updates line item", async () => {

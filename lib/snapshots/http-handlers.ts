@@ -5,6 +5,14 @@ import type {
   UnlockSnapshotInput
 } from "./types";
 import type { SnapshotCompareResult } from "./compare-service";
+import {
+  createSnapshotSchema,
+  lockSnapshotSchema,
+  unlockSnapshotSchema,
+  copySnapshotSchema,
+  compareSnapshotParamsSchema,
+  firstZodError
+} from "@/lib/validations";
 
 type HandlerResult = {
   status: number;
@@ -23,29 +31,6 @@ type SnapshotServiceLike = {
 type CompareServiceLike = {
   compare: (snapshotAId: string, snapshotBId: string) => Promise<SnapshotCompareResult>;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function getRequiredString(payload: Record<string, unknown>, field: string): string | null {
-  const value = payload[field];
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function getOptionalString(payload: Record<string, unknown>, field: string): string | null {
-  const value = payload[field];
-  if (value === undefined || value === null) return null;
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function isValidAsOfMonth(asOfMonth: string): boolean {
-  return /^\d{4}-(0[1-9]|1[0-2])$/.test(asOfMonth);
-}
 
 function asErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -89,24 +74,13 @@ export async function createSnapshot(
   service: SnapshotServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
-  }
-
-  const name = getRequiredString(payload, "name");
-  const asOfMonth = getRequiredString(payload, "asOfMonth");
-  const createdBy = getRequiredString(payload, "createdBy");
-
-  if (!name || !asOfMonth || !createdBy) {
-    return { status: 400, body: { error: "name, asOfMonth, and createdBy are required" } };
-  }
-
-  if (!isValidAsOfMonth(asOfMonth)) {
-    return { status: 400, body: { error: "asOfMonth must be in YYYY-MM format" } };
+  const result = createSnapshotSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
   try {
-    const data = await service.create({ name, asOfMonth, createdBy });
+    const data = await service.create(result.data);
     return { status: 201, body: { data } };
   } catch {
     return { status: 500, body: { error: "Failed to create snapshot" } };
@@ -117,20 +91,14 @@ export async function lockSnapshot(
   service: SnapshotServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
+  const result = lockSnapshotSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
-  const snapshotId = getRequiredString(payload, "snapshotId");
-  const lockedBy = getRequiredString(payload, "lockedBy");
-  const reason = getOptionalString(payload, "reason");
-
-  if (!snapshotId || !lockedBy) {
-    return { status: 400, body: { error: "snapshotId and lockedBy are required" } };
-  }
-
+  const { snapshotId, lockedBy, reason } = result.data;
   try {
-    const data = await service.lock({ snapshotId, lockedBy, reason: reason ?? undefined });
+    const data = await service.lock({ snapshotId, lockedBy, reason });
     return { status: 200, body: { data } };
   } catch (error) {
     const message = asErrorMessage(error);
@@ -145,20 +113,14 @@ export async function unlockSnapshot(
   service: SnapshotServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
+  const result = unlockSnapshotSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
-  const snapshotId = getRequiredString(payload, "snapshotId");
-  const unlockedBy = getRequiredString(payload, "unlockedBy");
-  const reason = getOptionalString(payload, "reason");
-
-  if (!snapshotId || !unlockedBy) {
-    return { status: 400, body: { error: "snapshotId and unlockedBy are required" } };
-  }
-
+  const { snapshotId, unlockedBy, reason } = result.data;
   try {
-    const data = await service.unlock({ snapshotId, unlockedBy, reason: reason ?? undefined });
+    const data = await service.unlock({ snapshotId, unlockedBy, reason });
     return { status: 200, body: { data } };
   } catch (error) {
     const message = asErrorMessage(error);
@@ -173,33 +135,13 @@ export async function copySnapshot(
   service: SnapshotServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
-  }
-
-  const sourceSnapshotId = getRequiredString(payload, "sourceSnapshotId");
-  const name = getRequiredString(payload, "name");
-  const asOfMonth = getRequiredString(payload, "asOfMonth");
-  const createdBy = getRequiredString(payload, "createdBy");
-
-  if (!sourceSnapshotId || !name || !asOfMonth || !createdBy) {
-    return {
-      status: 400,
-      body: { error: "sourceSnapshotId, name, asOfMonth, and createdBy are required" }
-    };
-  }
-
-  if (!isValidAsOfMonth(asOfMonth)) {
-    return { status: 400, body: { error: "asOfMonth must be in YYYY-MM format" } };
+  const result = copySnapshotSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
   try {
-    const data = await service.copyFromPrior({
-      sourceSnapshotId,
-      name,
-      asOfMonth,
-      createdBy
-    });
+    const data = await service.copyFromPrior(result.data);
     return { status: 201, body: { data } };
   } catch (error) {
     const message = asErrorMessage(error);
@@ -215,18 +157,16 @@ export async function compareSnapshots(
   snapshotAId: string | null,
   snapshotBId: string | null
 ): Promise<HandlerResult> {
-  if (!snapshotAId || snapshotAId.trim().length === 0) {
-    return { status: 400, body: { error: "snapshotAId (query param 'a') is required" } };
-  }
-  if (!snapshotBId || snapshotBId.trim().length === 0) {
-    return { status: 400, body: { error: "snapshotBId (query param 'b') is required" } };
-  }
-  if (snapshotAId === snapshotBId) {
-    return { status: 400, body: { error: "Snapshots must be different" } };
+  const result = compareSnapshotParamsSchema.safeParse({
+    a: snapshotAId ?? "",
+    b: snapshotBId ?? ""
+  });
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
   try {
-    const data = await service.compare(snapshotAId, snapshotBId);
+    const data = await service.compare(result.data.a, result.data.b);
     return { status: 200, body: { data } };
   } catch (error) {
     if (isNotFound(error)) {

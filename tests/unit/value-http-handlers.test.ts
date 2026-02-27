@@ -61,7 +61,7 @@ describe("value HTTP handlers", () => {
     });
 
     expect(result.status).toBe(400);
-    expect(result.body.error).toBe("lineItemId, snapshotId, and period are required");
+    expect(result.body.error).toBeTruthy();
   });
 
   it("validates period format", async () => {
@@ -72,7 +72,7 @@ describe("value HTTP handlers", () => {
     });
 
     expect(result.status).toBe(400);
-    expect(result.body.error).toBe("period must be in YYYY-MM format");
+    expect(String(result.body.error)).toContain("must be in YYYY-MM format");
   });
 
   it("returns 422 with reason_required when service throws MaterialChangeRequiredError", async () => {

@@ -74,7 +74,7 @@ describe("snapshot HTTP handlers", () => {
     const result = await createSnapshot(mockService, payload);
 
     expect(result.status).toBe(400);
-    expect(result.body.error).toBe("asOfMonth must be in YYYY-MM format");
+    expect(String(result.body.error)).toContain("must be in YYYY-MM format");
   });
 
   it("locks snapshot with valid payload", async () => {
