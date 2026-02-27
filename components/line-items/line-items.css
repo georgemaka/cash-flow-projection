@@ -52,13 +52,60 @@
 }
 
 /* Line item card */
+.li-card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+}
+
 .li-card-label {
   font-weight: 600;
+}
+
+.li-card-label-editable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.1rem 0.2rem;
+  margin: -0.1rem -0.2rem;
+}
+
+.li-card-label-editable:hover {
+  background: #edf2ff;
+}
+
+.li-rename-input {
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.15rem 0.3rem;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+  flex: 1;
+  min-width: 0;
 }
 
 .li-card-method {
   font-size: 0.82rem;
   color: var(--muted);
+}
+
+.li-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+}
+
+.li-move-select {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .li-card-edit {
@@ -68,6 +115,117 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* -----------------------------------------------------------------------
+   Admin Group Management
+   ----------------------------------------------------------------------- */
+.admin-group-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcff;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-group-form input {
+  flex: 1;
+  min-width: 120px;
+}
+
+.admin-group-form select {
+  min-width: 100px;
+}
+
+.admin-group-item-wrapper {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-group-item-wrapper:last-child {
+  border-bottom: none;
+}
+
+.admin-group-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.admin-group-item .admin-sidebar-item {
+  flex: 1;
+}
+
+.admin-group-actions {
+  display: flex;
+  gap: 0.15rem;
+  padding-right: 0.25rem;
+  flex-shrink: 0;
+}
+
+.admin-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.admin-icon-btn:hover:not(:disabled) {
+  background: #edf2ff;
+  color: var(--primary);
+}
+
+.admin-icon-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.admin-icon-btn-danger:hover:not(:disabled) {
+  background: #fff0f0;
+  color: var(--danger);
+}
+
+.admin-group-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  background: #fbfcff;
+}
+
+.admin-group-edit-form input {
+  font-weight: 600;
+}
+
+.admin-group-edit-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.admin-archived-section {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+  margin-top: 0.25rem;
+}
+
+.admin-archived-toggle {
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: center;
+}
+
+.admin-sidebar-item-archived {
+  opacity: 0.5;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.88rem;
 }
 
 /* Strategy picker */
