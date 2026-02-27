@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { AppErrorBoundary } from "@/components/error/AppErrorBoundary";
 import { isDevAuthBypassEnabled } from "@/lib/auth/dev-bypass";
 import { NavBar } from "@/components/ui/NavBar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -16,10 +17,10 @@ type RootLayoutProps = Readonly<{
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <AppErrorBoundary>
       <NavBar />
       <ToastProvider>{children}</ToastProvider>
-    </>
+    </AppErrorBoundary>
   );
 }
 
