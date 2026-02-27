@@ -7,15 +7,22 @@ import {
 import { lineItemService } from "../../../../lib/line-items/service-factory";
 import { requireAdmin, requireSignedIn } from "@/lib/auth";
 
-export async function GET(_request: Request, { params }: { params: { lineItemId: string } }) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ lineItemId: string }> }
+) {
   const guard = await requireSignedIn();
   if (guard) return guard;
 
-  const result = await getLineItem(lineItemService, params.lineItemId);
+  const { lineItemId } = await params;
+  const result = await getLineItem(lineItemService, lineItemId);
   return NextResponse.json(result.body, { status: result.status });
 }
 
-export async function PATCH(request: Request, { params }: { params: { lineItemId: string } }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ lineItemId: string }> }
+) {
   const guard = await requireAdmin();
   if (guard) return guard;
 
@@ -27,16 +34,20 @@ export async function PATCH(request: Request, { params }: { params: { lineItemId
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  const { lineItemId } = await params;
   const payload = {
     ...(typeof body === "object" && body ? body : {}),
-    lineItemId: params.lineItemId
+    lineItemId
   };
 
   const result = await updateLineItem(lineItemService, payload);
   return NextResponse.json(result.body, { status: result.status });
 }
 
-export async function DELETE(request: Request, { params }: { params: { lineItemId: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ lineItemId: string }> }
+) {
   const guard = await requireAdmin();
   if (guard) return guard;
 
@@ -48,9 +59,10 @@ export async function DELETE(request: Request, { params }: { params: { lineItemI
     body = {};
   }
 
+  const { lineItemId } = await params;
   const payload = {
     ...(typeof body === "object" && body ? body : {}),
-    lineItemId: params.lineItemId
+    lineItemId
   };
 
   const result = await archiveLineItem(lineItemService, payload);
