@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listValues, upsertValue } from "../../lib/values/http-handlers";
 import { MaterialChangeRequiredError } from "../../lib/values/threshold";
+import { LockedSnapshotError } from "../../lib/errors";
 
 function createMockService() {
   return {
@@ -110,7 +111,9 @@ describe("value HTTP handlers", () => {
   });
 
   it("returns 409 when snapshot is locked", async () => {
-    mockService.upsert.mockRejectedValueOnce(new Error("Cannot edit values in a locked snapshot"));
+    mockService.upsert.mockRejectedValueOnce(
+      new LockedSnapshotError("Cannot edit values in a locked snapshot")
+    );
 
     const result = await upsertValue(mockService, {
       lineItemId: "li-1",

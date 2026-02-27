@@ -1,6 +1,7 @@
 import type { ListValuesInput, UpsertValueInput } from "./types";
 import { MaterialChangeRequiredError } from "./threshold";
 import { upsertValueSchema, firstZodError } from "@/lib/validations";
+import { LockedSnapshotError } from "@/lib/errors";
 
 type HandlerResult = {
   status: number;
@@ -64,7 +65,7 @@ export async function upsertValue(
         }
       };
     }
-    if (error instanceof Error && error.message === "Cannot edit values in a locked snapshot") {
+    if (error instanceof LockedSnapshotError) {
       return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to upsert value" } };

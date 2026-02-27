@@ -14,7 +14,9 @@
     "test:ci": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -31,6 +33,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
