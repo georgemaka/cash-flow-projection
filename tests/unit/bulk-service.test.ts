@@ -100,9 +100,9 @@ describe("BulkValueService.restore", () => {
 
   it("throws when snapshot is locked", async () => {
     const svc = new BulkValueService(createMockPrisma("locked"));
-    await expect(
-      svc.restore("snap-1", [], "undo reason", "user-1")
-    ).rejects.toThrow("Cannot restore values in a locked snapshot");
+    await expect(svc.restore("snap-1", [], "undo reason", "user-1")).rejects.toThrow(
+      "Cannot restore values in a locked snapshot"
+    );
   });
 
   it("proceeds when snapshot is draft", async () => {
