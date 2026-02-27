@@ -23,10 +23,7 @@ vi.mock("@/lib/snapshots/service-factory", () => ({
   }
 }));
 
-import {
-  GET as listSnapshotsRoute,
-  POST as createSnapshotRoute
-} from "@/app/api/snapshots/route";
+import { GET as listSnapshotsRoute, POST as createSnapshotRoute } from "@/app/api/snapshots/route";
 import { POST as lockSnapshotRoute } from "@/app/api/snapshots/lock/route";
 import { POST as unlockSnapshotRoute } from "@/app/api/snapshots/unlock/route";
 import { POST as copySnapshotRoute } from "@/app/api/snapshots/copy/route";
