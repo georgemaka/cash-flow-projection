@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CashFlowGrid } from "./CashFlowGrid";
 import { MobileCardView } from "./MobileCardView";
 import type { GridData, PendingEdit } from "./types";
+import { ReasonRequiredError } from "@/lib/hooks/use-grid-data";
 
 interface DataGridViewProps {
   data: GridData;
   editable: boolean;
-  onSave?: (edits: PendingEdit[]) => Promise<void>;
+  onSave?: (edits: PendingEdit[], reason?: string) => Promise<void>;
 }
 
 /**
@@ -22,6 +23,13 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
   const [saving, setSaving] = useState(false);
   const [gridData, setGridData] = useState<GridData>(data);
   const [isMobile, setIsMobile] = useState(false);
+  const [reasonPrompt, setReasonPrompt] = useState<{
+    threshold: number;
+    delta: number;
+    field: string;
+  } | null>(null);
+  const [reasonText, setReasonText] = useState("");
+  const reasonInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -76,29 +84,55 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
     });
   }, []);
 
-  const handleSave = useCallback(async () => {
-    if (!onSave || pendingEdits.length === 0) return;
-    setSaving(true);
-    try {
-      await onSave(pendingEdits);
-      // Clear dirty flags after successful save
-      setGridData((prev) => ({
-        ...prev,
-        groups: prev.groups.map((g) => ({
-          ...g,
-          rows: g.rows.map((r) => ({
-            ...r,
-            values: Object.fromEntries(
-              Object.entries(r.values).map(([k, v]) => [k, { ...v, dirty: false }])
-            )
-          }))
+  const clearDirtyFlags = useCallback(() => {
+    setGridData((prev) => ({
+      ...prev,
+      groups: prev.groups.map((g) => ({
+        ...g,
+        rows: g.rows.map((r) => ({
+          ...r,
+          values: Object.fromEntries(
+            Object.entries(r.values).map(([k, v]) => [k, { ...v, dirty: false }])
+          )
         }))
-      }));
-      setPendingEdits([]);
-    } finally {
-      setSaving(false);
-    }
-  }, [onSave, pendingEdits]);
+      }))
+    }));
+    setPendingEdits([]);
+  }, []);
+
+  const handleSave = useCallback(
+    async (reason?: string) => {
+      if (!onSave || pendingEdits.length === 0) return;
+      setSaving(true);
+      try {
+        await onSave(pendingEdits, reason);
+        clearDirtyFlags();
+      } catch (err) {
+        if (err instanceof ReasonRequiredError) {
+          setReasonPrompt({ threshold: err.threshold, delta: err.delta, field: err.field });
+          setTimeout(() => reasonInputRef.current?.focus(), 50);
+        } else {
+          throw err;
+        }
+      } finally {
+        setSaving(false);
+      }
+    },
+    [onSave, pendingEdits, clearDirtyFlags]
+  );
+
+  const handleReasonConfirm = useCallback(async () => {
+    if (!reasonText.trim()) return;
+    const reason = reasonText.trim();
+    setReasonPrompt(null);
+    setReasonText("");
+    await handleSave(reason);
+  }, [handleSave, reasonText]);
+
+  const handleReasonCancel = useCallback(() => {
+    setReasonPrompt(null);
+    setReasonText("");
+  }, []);
 
   const isLocked = gridData.snapshotStatus === "locked";
 
@@ -132,7 +166,7 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
           {isLocked && <span className="snapshot-chip locked">Locked</span>}
           {editable && !isLocked && (
             <button
-              onClick={handleSave}
+              onClick={() => handleSave()}
               disabled={saving || pendingEdits.length === 0}
               type="button"
             >
@@ -141,6 +175,39 @@ export function DataGridView({ data, editable, onSave }: DataGridViewProps) {
           )}
         </div>
       </div>
+
+      {reasonPrompt && (
+        <div className="cf-reason-overlay">
+          <div className="cf-reason-dialog" role="dialog" aria-modal="true">
+            <h3 className="cf-reason-title">Reason required</h3>
+            <p className="cf-reason-desc">
+              This change to <strong>{reasonPrompt.field}</strong> is{" "}
+              <strong>${Math.round(reasonPrompt.delta).toLocaleString()}</strong> (threshold: $
+              {Math.round(reasonPrompt.threshold).toLocaleString()}). Please explain why.
+            </p>
+            <textarea
+              ref={reasonInputRef}
+              className="cf-reason-input"
+              value={reasonText}
+              onChange={(e) => setReasonText(e.target.value)}
+              placeholder="Enter reason for this change…"
+              rows={3}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleReasonConfirm();
+                if (e.key === "Escape") handleReasonCancel();
+              }}
+            />
+            <div className="cf-reason-actions">
+              <button onClick={handleReasonConfirm} disabled={!reasonText.trim()} type="button">
+                Confirm &amp; Save
+              </button>
+              <button className="ghost-btn" onClick={handleReasonCancel} type="button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isMobile ? (
         <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />
