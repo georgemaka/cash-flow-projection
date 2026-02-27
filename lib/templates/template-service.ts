@@ -7,6 +7,7 @@ type TxClient = Omit<
 >;
 
 import type { AuditService } from "../audit";
+import { isPrismaNotFound, NotFoundError, SourceNotLockedError } from "@/lib/errors";
 import { calculateProjections } from "../calculations";
 import type { PeriodValue, ProjectionMethod } from "../calculations";
 import type {
@@ -35,12 +36,20 @@ export class TemplateService {
    * Returns the structure that would be copied so admin can review before confirming.
    */
   async preview(sourceSnapshotId: string, targetYear: number): Promise<TemplatePreview> {
-    const source = await this.prisma.snapshot.findUniqueOrThrow({
-      where: { id: sourceSnapshotId }
-    });
+    let source;
+    try {
+      source = await this.prisma.snapshot.findUniqueOrThrow({
+        where: { id: sourceSnapshotId }
+      });
+    } catch (e) {
+      if (isPrismaNotFound(e)) {
+        throw new NotFoundError(`Snapshot not found: ${sourceSnapshotId}`);
+      }
+      throw e;
+    }
 
     if (source.status !== "locked") {
-      throw new Error("Can only onboard from a locked snapshot");
+      throw new SourceNotLockedError();
     }
 
     const groups = await this.prisma.group.findMany({
@@ -54,9 +63,9 @@ export class TemplateService {
       }
     });
 
-    // Fetch all values from the source snapshot for prior-year totals
+    // Fetch values from the source snapshot for prior-year totals (active items only)
     const sourceValues = await this.prisma.value.findMany({
-      where: { snapshotId: sourceSnapshotId }
+      where: { snapshotId: sourceSnapshotId, lineItem: { isActive: true } }
     });
 
     // Build a map: lineItemId -> sum of actual amounts
@@ -125,12 +134,20 @@ export class TemplateService {
    * 4. Audit log the creation
    */
   async onboard(input: OnboardFromTemplateInput) {
-    const source = await this.prisma.snapshot.findUniqueOrThrow({
-      where: { id: input.sourceSnapshotId }
-    });
+    let source;
+    try {
+      source = await this.prisma.snapshot.findUniqueOrThrow({
+        where: { id: input.sourceSnapshotId }
+      });
+    } catch (e) {
+      if (isPrismaNotFound(e)) {
+        throw new NotFoundError(`Snapshot not found: ${input.sourceSnapshotId}`);
+      }
+      throw e;
+    }
 
     if (source.status !== "locked") {
-      throw new Error("Can only onboard from a locked snapshot");
+      throw new SourceNotLockedError();
     }
 
     const targetPeriods = generateFiscalYearPeriods(input.targetYear);
@@ -147,9 +164,9 @@ export class TemplateService {
       }
     });
 
-    // Fetch source snapshot values for prior-year-based methods
+    // Fetch source snapshot values for prior-year-based methods (active items only)
     const sourceValues = await this.prisma.value.findMany({
-      where: { snapshotId: source.id }
+      where: { snapshotId: source.id, lineItem: { isActive: true } }
     });
 
     // Build prior year values map: lineItemId -> PeriodValue[]

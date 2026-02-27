@@ -1,5 +1,6 @@
 import type { TemplateService } from "./template-service";
 import { previewTemplateSchema, onboardTemplateSchema, firstZodError } from "@/lib/validations";
+import { NotFoundError, SourceNotLockedError } from "@/lib/errors";
 
 interface HandlerResult {
   status: number;
@@ -24,16 +25,12 @@ export async function previewTemplate(
     const preview = await service.preview(sourceSnapshotId, targetYear);
     return { status: 200, body: preview };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    if (message.includes("not found") || message.includes("No Snapshot found")) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Source snapshot not found" } };
     }
-
-    if (message.includes("Can only onboard from a locked snapshot")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof SourceNotLockedError) {
+      return { status: 409, body: { error: error.message } };
     }
-
     return { status: 500, body: { error: "Failed to generate preview" } };
   }
 }
@@ -56,16 +53,12 @@ export async function onboardTemplate(
     const snapshot = await service.onboard({ sourceSnapshotId, name, targetYear, createdBy });
     return { status: 201, body: snapshot };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    if (message.includes("not found") || message.includes("No Snapshot found")) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Source snapshot not found" } };
     }
-
-    if (message.includes("Can only onboard from a locked snapshot")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof SourceNotLockedError) {
+      return { status: 409, body: { error: error.message } };
     }
-
     return { status: 500, body: { error: "Failed to create snapshot from template" } };
   }
 }
