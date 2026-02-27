@@ -160,9 +160,8 @@ export class CompareService {
       return v.toString();
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const compareGroups: CompareGroupData[] = groups
-      .map((group: any) => {
+      .map((group) => {
         const groupLineItems = Array.from(lineItemsById.values())
           .filter((li) => li.groupId === group.id)
           .sort((a, b) => a.sortOrder - b.sortOrder);
