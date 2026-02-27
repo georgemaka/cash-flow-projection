@@ -17,6 +17,10 @@ jobs:
     timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cash_flow_projection?schema=public
+      # Format-valid placeholder — Clerk requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY at build time.
+      # Real keys are set as repository secrets for staging/production deployments.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_Y2xlcmsudGVzdC50ZXN0JA' }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_placeholder' }}
 
     steps:
       - name: Checkout
