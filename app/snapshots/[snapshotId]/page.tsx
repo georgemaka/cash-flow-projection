@@ -23,7 +23,7 @@ export default function SnapshotDataEntryPage() {
   );
 
   return (
-    <div className="dashboard-shell">
+    <div className="dashboard-shell-wide">
       {/* Breadcrumb */}
       <nav className="breadcrumb">
         <Link href="/" className="breadcrumb-link">Dashboard</Link>

@@ -49,6 +49,33 @@ export interface PendingEdit {
   value: string | null;
 }
 
+/** View mode options for the data grid. */
+export type ViewMode = "combined" | "projected" | "actual" | "variance";
+
+/**
+ * Determine whether a period (YYYY-MM) is in the past relative to today.
+ * A month is "past" if it's before the current month.
+ */
+export function isPastPeriod(period: string): boolean {
+  const now = new Date();
+  const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return period < currentPeriod;
+}
+
+/**
+ * For the combined view: pick the best value to display.
+ * If an actual exists, always prefer it. Otherwise fall back to projected.
+ */
+export function getCombinedValue(
+  cell: CellValue,
+  _period: string
+): { value: string | null; source: "actual" | "projected" } {
+  if (cell.actual !== null) {
+    return { value: cell.actual, source: "actual" };
+  }
+  return { value: cell.projected, source: "projected" };
+}
+
 /** Month labels for display. */
 export const MONTH_LABELS = [
   "Jan",

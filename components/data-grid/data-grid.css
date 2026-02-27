@@ -152,6 +152,36 @@
   background: #fff8e1;
 }
 
+/* Combined view: subtle tint for actual-period cells */
+.cf-grid-cell-actual {
+  background: #f0f7f0;
+}
+
+.cf-grid-row:hover .cf-grid-cell-actual {
+  background: #e8f2e8;
+}
+
+/* Period header tag (Act/Proj indicator in combined view) */
+.cf-grid-period-tag {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+.cf-grid-period-tag-actual {
+  color: #177137;
+}
+
+.cf-grid-period-tag-proj {
+  color: var(--primary);
+}
+
+.cf-grid-period-actual {
+  background: #f0f7f0;
+}
+
 /* Inline edit input */
 .cf-grid-input {
   width: 80px;

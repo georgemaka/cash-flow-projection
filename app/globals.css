@@ -195,6 +195,13 @@ a {
   animation: fadeInUp 0.3s ease;
 }
 
+.dashboard-shell-wide {
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  max-width: calc(100vw - 3rem);
+  animation: fadeInUp 0.3s ease;
+}
+
 .dashboard-header {
   margin-bottom: 1.5rem;
 }

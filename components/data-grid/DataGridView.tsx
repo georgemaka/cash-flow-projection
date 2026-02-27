@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CashFlowGrid } from "./CashFlowGrid";
 import { MobileCardView } from "./MobileCardView";
-import type { GridData, PendingEdit } from "./types";
+import type { GridData, PendingEdit, ViewMode } from "./types";
 import { ReasonRequiredError } from "@/lib/hooks/use-grid-data";
 import { BulkUpdatePanel } from "@/components/bulk-update/BulkUpdatePanel";
 import "@/components/bulk-update/bulk-update.css";
@@ -22,7 +22,7 @@ interface DataGridViewProps {
  * Manages pending edits and save state.
  */
 export function DataGridView({ data, editable, onSave, onReload }: DataGridViewProps) {
-  const [viewMode, setViewMode] = useState<"projected" | "actual" | "variance">("projected");
+  const [viewMode, setViewMode] = useState<ViewMode>("combined");
   const [pendingEdits, setPendingEdits] = useState<PendingEdit[]>([]);
   const [saving, setSaving] = useState(false);
   const [gridData, setGridData] = useState<GridData>(data);
@@ -145,27 +145,17 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
     <div className="cf-view">
       <div className="cf-view-toolbar">
         <div className="cf-view-modes">
-          <button
-            className={`ghost-btn${viewMode === "projected" ? " cf-view-mode-active" : ""}`}
-            onClick={() => setViewMode("projected")}
-            type="button"
-          >
-            Projected
-          </button>
-          <button
-            className={`ghost-btn${viewMode === "actual" ? " cf-view-mode-active" : ""}`}
-            onClick={() => setViewMode("actual")}
-            type="button"
-          >
-            Actual
-          </button>
-          <button
-            className={`ghost-btn${viewMode === "variance" ? " cf-view-mode-active" : ""}`}
-            onClick={() => setViewMode("variance")}
-            type="button"
-          >
-            Variance
-          </button>
+          {(["combined", "projected", "actual", "variance"] as const).map((mode) => (
+            <button
+              key={mode}
+              className={`ghost-btn${viewMode === mode ? " cf-view-mode-active" : ""}`}
+              onClick={() => setViewMode(mode)}
+              type="button"
+              aria-pressed={viewMode === mode}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
         </div>
         <div className="cf-view-actions">
           {isLocked && <span className="snapshot-chip locked">Locked</span>}

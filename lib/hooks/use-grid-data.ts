@@ -189,19 +189,17 @@ function assembleGridData(
   groups: GroupResponse[],
   values: ValueResponse[]
 ): GridData {
-  // Determine periods from values, or default to current year
+  // Always generate all 12 months for the snapshot year, even if some
+  // months have no data yet. This ensures the grid always shows the full year.
   const periodSet = new Set<string>();
+  const year = new Date(snapshot.asOfMonth).getUTCFullYear();
+  for (let m = 1; m <= 12; m++) {
+    periodSet.add(`${year}-${String(m).padStart(2, "0")}`);
+  }
+  // Also include any periods from values that might fall outside the year
   for (const v of values) {
     const period = extractPeriod(v.period);
     if (period) periodSet.add(period);
-  }
-
-  // If no values exist yet, generate 12 months for the snapshot year
-  if (periodSet.size === 0) {
-    const year = new Date(snapshot.asOfMonth).getUTCFullYear();
-    for (let m = 1; m <= 12; m++) {
-      periodSet.add(`${year}-${String(m).padStart(2, "0")}`);
-    }
   }
 
   const periods = Array.from(periodSet).sort();
