@@ -1,6 +1,6 @@
-import { type PrismaClient, Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { diffFields, type AuditService } from "../audit";
-import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
+import { AlreadyArchivedError, isPrismaNotFound, NotFoundError } from "@/lib/errors";
 import type {
   ArchiveLineItemInput,
   CreateLineItemInput,
@@ -55,7 +55,7 @@ export class LineItemService {
     try {
       return await this.prisma.lineItem.findUniqueOrThrow({ where: { id: lineItemId } });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Line item not found: ${lineItemId}`);
       }
       throw e;
@@ -103,7 +103,7 @@ export class LineItemService {
         where: { id: input.lineItemId }
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Line item not found: ${input.lineItemId}`);
       }
       throw e;
@@ -148,7 +148,7 @@ export class LineItemService {
         where: { id: input.lineItemId }
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Line item not found: ${input.lineItemId}`);
       }
       throw e;

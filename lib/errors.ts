@@ -52,3 +52,16 @@ export class LockedSnapshotError extends Error {
     this.name = "LockedSnapshotError";
   }
 }
+
+/**
+ * Check if an error is a Prisma "not found" error (P2025).
+ * Works without requiring generated Prisma client types.
+ */
+export function isPrismaNotFound(e: unknown): boolean {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    "code" in e &&
+    (e as { code: string }).code === "P2025"
+  );
+}

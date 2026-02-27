@@ -8,7 +8,12 @@
  * all top-level entities are upserted by a stable unique key.
  */
 
-import { PrismaClient, GroupType, ProjectionMethod, UserRole } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+
+// Local enum values matching prisma/schema.prisma — avoids needing generated client
+const GroupType = { sector: "sector", non_operating: "non_operating", custom: "custom" } as const;
+const ProjectionMethod = { manual: "manual", annual_spread: "annual_spread", prior_year_pct: "prior_year_pct", prior_year_flat: "prior_year_flat" } as const;
+const UserRole = { admin: "admin", editor: "editor", viewer: "viewer" } as const;
 
 const prisma = new PrismaClient();
 
