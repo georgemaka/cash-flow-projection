@@ -115,8 +115,11 @@ export class SnapshotService {
       throw new Error("Snapshot is already unlocked");
     }
 
+    // Include status: "locked" in WHERE so a concurrent re-lock between the
+    // pre-check and this update fails atomically (Prisma P2025) rather than
+    // silently overwriting the re-locked state.
     const updated = await this.prisma.snapshot.update({
-      where: { id: snapshot.id },
+      where: { id: snapshot.id, status: "locked" },
       data: {
         status: "draft",
         lockedBy: null,

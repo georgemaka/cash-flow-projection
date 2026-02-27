@@ -340,6 +340,20 @@ describe("SnapshotService", () => {
         "ui_edit"
       );
     });
+
+    it("uses status:'locked' in WHERE to prevent concurrent re-lock race condition", async () => {
+      // Verify unlock uses an atomic WHERE to prevent the window where a concurrent
+      // lock() completes between our pre-check and this update.
+      const lockedSnapshot = { id: "snap-1", status: "locked" };
+      const prismaAny = mockPrisma as Record<string, Record<string, ReturnType<typeof vi.fn>>>;
+      prismaAny.snapshot.findUniqueOrThrow.mockResolvedValue(lockedSnapshot);
+      prismaAny.snapshot.update.mockResolvedValue({ ...lockedSnapshot, status: "draft" });
+
+      await service.unlock({ snapshotId: "snap-1", unlockedBy: "admin-1" });
+
+      const updateWhere = prismaAny.snapshot.update.mock.calls[0][0].where;
+      expect(updateWhere).toMatchObject({ id: "snap-1", status: "locked" });
+    });
   });
 
   // -------------------------------------------------------------------------
