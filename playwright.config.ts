@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const PLAYWRIGHT_PORT = process.env.PLAYWRIGHT_PORT ?? "3100";
+const PLAYWRIGHT_BASE_URL = `http://localhost:${PLAYWRIGHT_PORT}`;
+
 /**
  * Playwright configuration for smoke tests.
  *
@@ -15,7 +18,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
 
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: PLAYWRIGHT_BASE_URL,
     trace: "retain-on-failure"
   },
 
@@ -27,8 +30,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: `npm run dev -- --port ${PLAYWRIGHT_PORT}`,
+    url: PLAYWRIGHT_BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
     env: {

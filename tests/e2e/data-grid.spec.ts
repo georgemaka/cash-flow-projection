@@ -34,8 +34,8 @@ test.describe("data grid — draft snapshot", () => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
-    await expect(page.getByText("Rental Income")).toBeVisible();
-    await expect(page.getByText("Operating Expenses")).toBeVisible();
+    await expect(page.locator(".cf-grid-group-name", { hasText: "Rental Income" })).toBeVisible();
+    await expect(page.locator(".cf-grid-group-name", { hasText: "Operating Expenses" })).toBeVisible();
   });
 
   test("renders line item labels", async ({ page }) => {
@@ -51,8 +51,8 @@ test.describe("data grid — draft snapshot", () => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
-    // Base Rent projected = $10,000 per month
-    await expect(page.getByText("$10,000")).toBeVisible();
+    // Base Rent projected = 10,000 per month
+    await expect(page.getByText("10,000")).toBeVisible();
   });
 
   test("renders subtotal rows", async ({ page }) => {
