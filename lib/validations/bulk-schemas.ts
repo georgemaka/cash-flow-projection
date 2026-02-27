@@ -23,8 +23,16 @@ export const bulkUpdateSchema = z
 const restoreEntrySchema = z.object({
   lineItemId: nonEmptyString,
   period: yearMonthString,
-  projectedAmount: z.string().nullable().optional(),
-  actualAmount: z.string().nullable().optional()
+  projectedAmount: z
+    .string()
+    .regex(/^-?\d+(\.\d{1,2})?$/, "must be a valid decimal amount")
+    .nullable()
+    .optional(),
+  actualAmount: z
+    .string()
+    .regex(/^-?\d+(\.\d{1,2})?$/, "must be a valid decimal amount")
+    .nullable()
+    .optional()
 });
 
 export const bulkRestoreSchema = z.object({

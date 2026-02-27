@@ -65,6 +65,24 @@ describe("createSnapshotSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects year below 2000", () => {
+    const result = createSnapshotSchema.safeParse({
+      name: "X",
+      asOfMonth: "1999-01",
+      createdBy: "u"
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects year above 2100", () => {
+    const result = createSnapshotSchema.safeParse({
+      name: "X",
+      asOfMonth: "2101-06",
+      createdBy: "u"
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("lockSnapshotSchema", () => {
@@ -229,6 +247,30 @@ describe("updateLineItemSchema", () => {
       expect(result.error.issues[0].message).toBe("No updatable fields provided");
     }
   });
+
+  it("accepts projectionParams as object", () => {
+    const result = updateLineItemSchema.safeParse({
+      lineItemId: "li1",
+      projectionParams: { rate: 0.05, basis: "prior_year" }
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects projectionParams as array", () => {
+    const result = updateLineItemSchema.safeParse({
+      lineItemId: "li1",
+      projectionParams: [1, 2, 3]
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects projectionParams as a plain string", () => {
+    const result = updateLineItemSchema.safeParse({
+      lineItemId: "li1",
+      projectionParams: "not-an-object"
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("archiveLineItemSchema", () => {
@@ -267,6 +309,36 @@ describe("upsertValueSchema", () => {
       period: "2026-03",
       projectedAmount: null,
       actualAmount: null
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects non-numeric projectedAmount", () => {
+    const result = upsertValueSchema.safeParse({
+      lineItemId: "li1",
+      snapshotId: "s1",
+      period: "2026-03",
+      projectedAmount: "abc"
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects amount with more than 2 decimal places", () => {
+    const result = upsertValueSchema.safeParse({
+      lineItemId: "li1",
+      snapshotId: "s1",
+      period: "2026-03",
+      projectedAmount: "1000.123"
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts negative amount", () => {
+    const result = upsertValueSchema.safeParse({
+      lineItemId: "li1",
+      snapshotId: "s1",
+      period: "2026-03",
+      actualAmount: "-500.00"
     });
     expect(result.success).toBe(true);
   });
@@ -345,6 +417,15 @@ describe("bulkRestoreSchema", () => {
     const result = bulkRestoreSchema.safeParse({
       snapshotId: "s1",
       restores: [{ lineItemId: "li1", period: "2026-01" }]
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects non-numeric projectedAmount in restore entry", () => {
+    const result = bulkRestoreSchema.safeParse({
+      snapshotId: "s1",
+      reason: "Undo",
+      restores: [{ lineItemId: "li1", period: "2026-01", projectedAmount: "bad" }]
     });
     expect(result.success).toBe(false);
   });

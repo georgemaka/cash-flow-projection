@@ -14,8 +14,12 @@
     "test:ci": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
+    "db:seed": "prisma db seed",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.38.3",
@@ -37,6 +41,7 @@
     "eslint-config-prettier": "^10.0.0",
     "prettier": "^3.0.0",
     "prisma": "^6.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0",
     "vitest": "^3.0.0",
     "xlsx": "^0.18.5"

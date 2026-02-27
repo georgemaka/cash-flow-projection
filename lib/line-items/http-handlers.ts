@@ -86,11 +86,7 @@ export async function createLineItem(
       createdBy: createdBy ?? null
     });
     return { status: 201, body: { data } };
-  } catch (error) {
-    const message = asErrorMessage(error);
-    if (message.includes("Invalid projectionMethod")) {
-      return { status: 400, body: { error: message } };
-    }
+  } catch {
     return { status: 500, body: { error: "Failed to create line item" } };
   }
 }
@@ -127,12 +123,8 @@ export async function updateLineItem(
     });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
     if (isNotFound(error)) {
       return { status: 404, body: { error: "Line item not found" } };
-    }
-    if (message.includes("Invalid projectionMethod")) {
-      return { status: 400, body: { error: message } };
     }
     return { status: 500, body: { error: "Failed to update line item" } };
   }
