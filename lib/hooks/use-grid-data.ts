@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { GridData, GridGroup, GridRow, PendingEdit } from "@/components/data-grid/types";
+import { mergeEdits } from "./merge-edits";
 
 /**
  * Thrown by saveEdits when the API returns 422 reason_required.
@@ -96,36 +97,11 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
       if (!snapshotId || edits.length === 0) return;
 
       // Group edits by lineItemId + period to merge projected/actual/note changes
-      const mergedEdits = new Map<
-        string,
-        {
-          lineItemId: string;
-          period: string;
-          projected?: string | null;
-          actual?: string | null;
-          note?: string | null;
-        }
-      >();
-
-      for (const edit of edits) {
-        const key = `${edit.lineItemId}:${edit.period}`;
-        const existing = mergedEdits.get(key) ?? {
-          lineItemId: edit.lineItemId,
-          period: edit.period
-        };
-        if (edit.field === "projected") {
-          existing.projected = edit.value;
-        } else if (edit.field === "actual") {
-          existing.actual = edit.value;
-        } else {
-          existing.note = edit.value;
-        }
-        mergedEdits.set(key, existing);
-      }
+      const merged = mergeEdits(edits);
 
       // Save each edit and read response body (needed to detect 422)
       const results = await Promise.all(
-        Array.from(mergedEdits.values()).map(async (edit) => {
+        merged.map(async (edit) => {
           const res = await fetch("/api/values/upsert", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
