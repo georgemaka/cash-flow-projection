@@ -108,4 +108,18 @@ describe("value HTTP handlers", () => {
       expect.objectContaining({ reason: "Revised budget approved in board meeting" })
     );
   });
+
+  it("returns 409 when snapshot is locked", async () => {
+    mockService.upsert.mockRejectedValueOnce(new Error("Cannot edit values in a locked snapshot"));
+
+    const result = await upsertValue(mockService, {
+      lineItemId: "li-1",
+      snapshotId: "snap-locked",
+      period: "2026-01",
+      projectedAmount: "1000.00"
+    });
+
+    expect(result.status).toBe(409);
+    expect(result.body.error).toBe("Cannot edit values in a locked snapshot");
+  });
 });
