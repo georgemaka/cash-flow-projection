@@ -102,7 +102,7 @@ export class CompareService {
           }
         }
       }),
-      this.prisma.group.findMany({ orderBy: { sortOrder: "asc" } })
+      this.prisma.group.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } })
     ]);
 
     // Collect periods from both snapshots

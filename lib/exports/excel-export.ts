@@ -3,6 +3,11 @@ import Decimal from "decimal.js";
 import type { ExportGroup, ExportSnapshotData } from "./types";
 import { formatPeriodLong } from "./types";
 
+/** Convert Decimal to JS number safely — rounds to 2dp first to avoid float drift. */
+function toSafeNumber(d: Decimal): number {
+  return Number(d.toFixed(2));
+}
+
 /**
  * Number format matching the original workbook:
  * - Thousands separator
@@ -139,9 +144,9 @@ export async function generateExcelExport(data: ExportSnapshotData): Promise<any
     }
     netOpValues.push(periodNet.toFixed(2));
     netOpTotal = netOpTotal.plus(periodNet);
-    netOpRow.push(periodNet.toNumber() as never);
+    netOpRow.push(toSafeNumber(periodNet) as never);
   }
-  netOpRow.push(netOpTotal.toNumber() as never);
+  netOpRow.push(toSafeNumber(netOpTotal) as never);
 
   const netOpExcelRow = ws.addRow(netOpRow);
   netOpExcelRow.font = { bold: true, size: 12, name: "Calibri" };
@@ -178,9 +183,9 @@ export async function generateExcelExport(data: ExportSnapshotData): Promise<any
         periodNet = periodNet.plus(groupTotals[i]);
       }
       totalNonOp = totalNonOp.plus(periodNet);
-      totalNonOpRow.push(periodNet.toNumber() as never);
+      totalNonOpRow.push(toSafeNumber(periodNet) as never);
     }
-    totalNonOpRow.push(totalNonOp.toNumber() as never);
+    totalNonOpRow.push(toSafeNumber(totalNonOp) as never);
 
     const totalNonOpExcelRow = ws.addRow(totalNonOpRow);
     totalNonOpExcelRow.font = subtotalFont;
@@ -207,9 +212,9 @@ export async function generateExcelExport(data: ExportSnapshotData): Promise<any
       }
       const net = opTotal.plus(nonOpTotal);
       netCashTotal = netCashTotal.plus(net);
-      netCashRow.push(net.toNumber() as never);
+      netCashRow.push(toSafeNumber(net) as never);
     }
-    netCashRow.push(netCashTotal.toNumber() as never);
+    netCashRow.push(toSafeNumber(netCashTotal) as never);
 
     const netCashExcelRow = ws.addRow(netCashRow);
     netCashExcelRow.font = { bold: true, size: 12, name: "Calibri" };
@@ -262,7 +267,7 @@ function writeGroupSection(
         const dec = new Decimal(amount);
         periodTotals[i] = periodTotals[i].plus(dec);
         grandTotal = grandTotal.plus(dec);
-        row.push(dec.toNumber());
+        row.push(toSafeNumber(dec));
       } else {
         row.push(null);
       }
@@ -277,7 +282,7 @@ function writeGroupSection(
         lineTotal = lineTotal.plus(new Decimal(amount));
       }
     }
-    row.push(lineTotal.toNumber());
+    row.push(toSafeNumber(lineTotal));
 
     const dataRow = ws.addRow(row);
     dataRow.font = styles.dataFont;
@@ -292,9 +297,9 @@ function writeGroupSection(
   const subtotalLabel = `Total ${group.name}`;
   const subtotalRow: (string | number)[] = ["", subtotalLabel];
   for (const t of periodTotals) {
-    subtotalRow.push(t.toNumber());
+    subtotalRow.push(toSafeNumber(t));
   }
-  subtotalRow.push(grandTotal.toNumber());
+  subtotalRow.push(toSafeNumber(grandTotal));
 
   const subtotalExcelRow = ws.addRow(subtotalRow);
   subtotalExcelRow.font = styles.subtotalFont;

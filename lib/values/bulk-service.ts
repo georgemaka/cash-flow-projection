@@ -91,33 +91,39 @@ export class BulkValueService {
     const writes = changes.filter((c) => c.newValue !== null && c.newValue !== c.oldValue);
 
     await this.prisma.$transaction(async (tx: TxClient) => {
-      for (const change of writes) {
-        const periodDate = new Date(`${change.period}-01T00:00:00.000Z`);
-        const update: Record<string, unknown> = { updatedBy };
-        if (field === "projected") {
-          update.projectedAmount = change.newValue;
-        } else {
-          update.actualAmount = change.newValue;
-        }
-
-        await tx.value.upsert({
-          where: {
-            lineItemId_snapshotId_period: {
-              lineItemId: change.lineItemId,
-              snapshotId,
-              period: periodDate
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < writes.length; i += CHUNK_SIZE) {
+        const chunk = writes.slice(i, i + CHUNK_SIZE);
+        await Promise.all(
+          chunk.map((change) => {
+            const periodDate = new Date(`${change.period}-01T00:00:00.000Z`);
+            const update: Record<string, unknown> = { updatedBy };
+            if (field === "projected") {
+              update.projectedAmount = change.newValue;
+            } else {
+              update.actualAmount = change.newValue;
             }
-          },
-          create: {
-            lineItemId: change.lineItemId,
-            snapshotId,
-            period: periodDate,
-            projectedAmount: field === "projected" ? change.newValue : null,
-            actualAmount: field === "actual" ? change.newValue : null,
-            updatedBy
-          },
-          update
-        });
+
+            return tx.value.upsert({
+              where: {
+                lineItemId_snapshotId_period: {
+                  lineItemId: change.lineItemId,
+                  snapshotId,
+                  period: periodDate
+                }
+              },
+              create: {
+                lineItemId: change.lineItemId,
+                snapshotId,
+                period: periodDate,
+                projectedAmount: field === "projected" ? change.newValue : null,
+                actualAmount: field === "actual" ? change.newValue : null,
+                updatedBy
+              },
+              update
+            });
+          })
+        );
       }
     });
 
@@ -147,30 +153,36 @@ export class BulkValueService {
     }
 
     await this.prisma.$transaction(async (tx: TxClient) => {
-      for (const r of restores) {
-        const periodDate = new Date(`${r.period}-01T00:00:00.000Z`);
-        await tx.value.upsert({
-          where: {
-            lineItemId_snapshotId_period: {
-              lineItemId: r.lineItemId,
-              snapshotId,
-              period: periodDate
-            }
-          },
-          create: {
-            lineItemId: r.lineItemId,
-            snapshotId,
-            period: periodDate,
-            projectedAmount: r.projectedAmount,
-            actualAmount: r.actualAmount,
-            updatedBy
-          },
-          update: {
-            projectedAmount: r.projectedAmount,
-            actualAmount: r.actualAmount,
-            updatedBy
-          }
-        });
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < restores.length; i += CHUNK_SIZE) {
+        const chunk = restores.slice(i, i + CHUNK_SIZE);
+        await Promise.all(
+          chunk.map((r) => {
+            const periodDate = new Date(`${r.period}-01T00:00:00.000Z`);
+            return tx.value.upsert({
+              where: {
+                lineItemId_snapshotId_period: {
+                  lineItemId: r.lineItemId,
+                  snapshotId,
+                  period: periodDate
+                }
+              },
+              create: {
+                lineItemId: r.lineItemId,
+                snapshotId,
+                period: periodDate,
+                projectedAmount: r.projectedAmount,
+                actualAmount: r.actualAmount,
+                updatedBy
+              },
+              update: {
+                projectedAmount: r.projectedAmount,
+                actualAmount: r.actualAmount,
+                updatedBy
+              }
+            });
+          })
+        );
       }
     });
 
