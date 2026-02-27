@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import "./env"; // fail fast if DATABASE_URL is missing
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
