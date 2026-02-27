@@ -66,7 +66,6 @@ jobs:
 
       - name: E2E smoke tests
         run: npm run test:e2e
-        continue-on-error: true
         env:
           DEV_AUTH_BYPASS: "true"
 

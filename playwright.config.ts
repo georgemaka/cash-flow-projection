@@ -27,7 +27,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "DEV_AUTH_BYPASS=true npm run dev",
+    command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
