@@ -17,12 +17,22 @@ async function mockSnapshotsApi(page: import("@playwright/test").Page) {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        data: [
-          { id: "snap-1", name: "FY2026 Draft", status: "draft", asOfMonth: "2026-01-01" },
-          { id: "snap-2", name: "FY2025 Locked", status: "locked", asOfMonth: "2025-01-01" }
-        ]
-      })
+      body: JSON.stringify([
+        {
+          id: "snap-1",
+          name: "FY2026 Draft",
+          status: "draft",
+          asOfMonth: "2026-01-01T00:00:00.000Z",
+          createdAt: "2026-01-15T10:00:00Z"
+        },
+        {
+          id: "snap-2",
+          name: "FY2025 Locked",
+          status: "locked",
+          asOfMonth: "2025-01-01T00:00:00.000Z",
+          createdAt: "2025-06-01T10:00:00Z"
+        }
+      ])
     });
   });
 }

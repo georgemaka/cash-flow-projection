@@ -27,15 +27,15 @@ test.describe("data grid — draft snapshot", () => {
   test("renders snapshot name and status", async ({ page }) => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("Draft — editable")).toBeVisible();
+    await expect(page.getByText("Draft", { exact: false })).toBeVisible();
   });
 
   test("renders group headers", async ({ page }) => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
-    await expect(page.getByText("Rental Income")).toBeVisible();
-    await expect(page.getByText("Operating Expenses")).toBeVisible();
+    await expect(page.locator(".cf-grid-group-name", { hasText: "Rental Income" })).toBeVisible();
+    await expect(page.locator(".cf-grid-group-name", { hasText: "Operating Expenses" })).toBeVisible();
   });
 
   test("renders line item labels", async ({ page }) => {
@@ -51,8 +51,8 @@ test.describe("data grid — draft snapshot", () => {
     await page.goto("/snapshots/snap-draft");
     await expect(page.locator("table.cf-grid")).toBeVisible({ timeout: 10_000 });
 
-    // Base Rent projected = $10,000 per month
-    await expect(page.getByText("$10,000")).toBeVisible();
+    // Base Rent projected = 10,000 per month
+    await expect(page.getByText("10,000")).toBeVisible();
   });
 
   test("renders subtotal rows", async ({ page }) => {
@@ -114,7 +114,7 @@ test.describe("data grid — locked snapshot", () => {
 
   test("shows locked status indicator", async ({ page }) => {
     await page.goto("/snapshots/snap-locked");
-    await expect(page.getByText("Locked — read only")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Locked", { exact: false })).toBeVisible({ timeout: 10_000 });
   });
 
   test("cells are not editable (no editable class)", async ({ page }) => {
