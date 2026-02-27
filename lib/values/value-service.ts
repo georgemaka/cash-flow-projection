@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { diffFields, type AuditService } from "../audit";
 import type { ListValuesInput, UpsertValueInput } from "./types";
 import { checkMaterialChange, MaterialChangeRequiredError } from "./threshold";
+import { LockedSnapshotError } from "@/lib/errors";
 
 function parsePeriod(period: string): Date {
   const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period);
@@ -46,7 +47,7 @@ export class ValueService {
       select: { status: true }
     });
     if (snapshot.status === "locked") {
-      throw new Error("Cannot edit values in a locked snapshot");
+      throw new LockedSnapshotError("Cannot edit values in a locked snapshot");
     }
 
     const periodDate = parsePeriod(input.period);

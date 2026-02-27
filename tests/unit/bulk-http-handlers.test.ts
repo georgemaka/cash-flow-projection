@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleBulkUpdate, handleBulkRestore } from "../../lib/values/bulk-http-handlers";
+import { LockedSnapshotError } from "../../lib/errors";
 
 function createMockService() {
   return {
@@ -69,7 +70,7 @@ describe("handleBulkUpdate", () => {
 
   it("returns 409 when snapshot is locked", async () => {
     mockService.apply.mockRejectedValueOnce(
-      new Error("Cannot apply bulk updates to a locked snapshot")
+      new LockedSnapshotError("Cannot apply bulk updates to a locked snapshot")
     );
 
     const result = await handleBulkUpdate(mockService, {
@@ -138,7 +139,7 @@ describe("handleBulkRestore", () => {
 
   it("returns 409 when snapshot is locked", async () => {
     mockService.restore.mockRejectedValueOnce(
-      new Error("Cannot restore values in a locked snapshot")
+      new LockedSnapshotError("Cannot restore values in a locked snapshot")
     );
 
     const result = await handleBulkRestore(mockService, {

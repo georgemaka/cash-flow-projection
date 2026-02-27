@@ -6,6 +6,7 @@ import {
   listGroups,
   updateGroup
 } from "../../lib/groups/http-handlers";
+import { AlreadyArchivedError, NotFoundError } from "../../lib/errors";
 
 function createMockService() {
   return {
@@ -41,7 +42,7 @@ describe("group HTTP handlers", () => {
   });
 
   it("returns 404 when group is not found", async () => {
-    mockService.getById.mockRejectedValueOnce(new Error("No Group found"));
+    mockService.getById.mockRejectedValueOnce(new NotFoundError("Group not found: missing"));
 
     const result = await getGroup(mockService, "missing");
 
@@ -119,7 +120,9 @@ describe("group HTTP handlers", () => {
   });
 
   it("returns 409 when group is already archived", async () => {
-    mockService.archive.mockRejectedValueOnce(new Error("Group is already archived"));
+    mockService.archive.mockRejectedValueOnce(
+      new AlreadyArchivedError("Group is already archived")
+    );
 
     const result = await archiveGroup(mockService, {
       groupId: "grp-1",

@@ -1,5 +1,6 @@
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient, Prisma } from "@prisma/client";
 import { diffFields, type AuditService } from "../audit";
+import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
 import type {
   ArchiveLineItemInput,
   CreateLineItemInput,
@@ -51,7 +52,14 @@ export class LineItemService {
   }
 
   async getById(lineItemId: string) {
-    return this.prisma.lineItem.findUniqueOrThrow({ where: { id: lineItemId } });
+    try {
+      return await this.prisma.lineItem.findUniqueOrThrow({ where: { id: lineItemId } });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        throw new NotFoundError(`Line item not found: ${lineItemId}`);
+      }
+      throw e;
+    }
   }
 
   async create(input: CreateLineItemInput) {
@@ -89,9 +97,17 @@ export class LineItemService {
   }
 
   async update(input: UpdateLineItemInput) {
-    const current = await this.prisma.lineItem.findUniqueOrThrow({
-      where: { id: input.lineItemId }
-    });
+    let current;
+    try {
+      current = await this.prisma.lineItem.findUniqueOrThrow({
+        where: { id: input.lineItemId }
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        throw new NotFoundError(`Line item not found: ${input.lineItemId}`);
+      }
+      throw e;
+    }
 
     if (input.projectionMethod !== undefined && !isProjectionMethod(input.projectionMethod)) {
       throw new Error("Invalid projectionMethod");
@@ -126,12 +142,20 @@ export class LineItemService {
   }
 
   async archive(input: ArchiveLineItemInput) {
-    const current = await this.prisma.lineItem.findUniqueOrThrow({
-      where: { id: input.lineItemId }
-    });
+    let current;
+    try {
+      current = await this.prisma.lineItem.findUniqueOrThrow({
+        where: { id: input.lineItemId }
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        throw new NotFoundError(`Line item not found: ${input.lineItemId}`);
+      }
+      throw e;
+    }
 
     if (!current.isActive) {
-      throw new Error("Line item is already archived");
+      throw new AlreadyArchivedError("Line item is already archived");
     }
 
     const updated = await this.prisma.lineItem.update({

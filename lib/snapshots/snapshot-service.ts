@@ -1,4 +1,10 @@
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient, Prisma } from "@prisma/client";
+import {
+  AlreadyLockedError,
+  AlreadyUnlockedError,
+  NotFoundError,
+  SourceNotLockedError
+} from "@/lib/errors";
 
 type TxClient = Omit<
   PrismaClient,
@@ -65,7 +71,7 @@ export class SnapshotService {
     });
 
     if (snapshot.status === "locked") {
-      throw new Error("Snapshot is already locked");
+      throw new AlreadyLockedError();
     }
 
     // Create structure version and update snapshot in a transaction.
@@ -112,7 +118,7 @@ export class SnapshotService {
     });
 
     if (snapshot.status === "draft") {
-      throw new Error("Snapshot is already unlocked");
+      throw new AlreadyUnlockedError();
     }
 
     // Include status: "locked" in WHERE so a concurrent re-lock between the
@@ -149,7 +155,7 @@ export class SnapshotService {
     });
 
     if (source.status !== "locked") {
-      throw new Error("Can only copy from a locked snapshot");
+      throw new SourceNotLockedError();
     }
 
     const sourceValues = await this.prisma.value.findMany({
@@ -216,13 +222,20 @@ export class SnapshotService {
    * Get a single snapshot by ID with related data.
    */
   async getById(snapshotId: string) {
-    return this.prisma.snapshot.findUniqueOrThrow({
-      where: { id: snapshotId },
-      include: {
-        creator: { select: { id: true, name: true, email: true } },
-        locker: { select: { id: true, name: true, email: true } },
-        structureVersion: true
+    try {
+      return await this.prisma.snapshot.findUniqueOrThrow({
+        where: { id: snapshotId },
+        include: {
+          creator: { select: { id: true, name: true, email: true } },
+          locker: { select: { id: true, name: true, email: true } },
+          structureVersion: true
+        }
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        throw new NotFoundError(`Snapshot not found: ${snapshotId}`);
       }
-    });
+      throw e;
+    }
   }
 }

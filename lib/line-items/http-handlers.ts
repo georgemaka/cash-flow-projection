@@ -10,6 +10,7 @@ import {
   archiveLineItemSchema,
   firstZodError
 } from "@/lib/validations";
+import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
 
 type HandlerResult = {
   status: number;
@@ -23,16 +24,6 @@ type LineItemServiceLike = {
   update: (input: UpdateLineItemInput) => Promise<unknown>;
   archive: (input: ArchiveLineItemInput) => Promise<unknown>;
 };
-
-function asErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  return "Unexpected error";
-}
-
-function isNotFound(error: unknown): boolean {
-  const message = asErrorMessage(error).toLowerCase();
-  return message.includes("not found") || (message.includes("no") && message.includes("found"));
-}
 
 export async function listLineItems(
   service: LineItemServiceLike,
@@ -59,7 +50,7 @@ export async function getLineItem(
     const data = await service.getById(lineItemId);
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Line item not found" } };
     }
     return { status: 500, body: { error: "Failed to fetch line item" } };
@@ -123,7 +114,7 @@ export async function updateLineItem(
     });
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Line item not found" } };
     }
     return { status: 500, body: { error: "Failed to update line item" } };
@@ -144,12 +135,11 @@ export async function archiveLineItem(
     const data = await service.archive({ lineItemId, archivedBy: archivedBy ?? null, reason });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Line item not found" } };
     }
-    if (message.includes("already archived")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof AlreadyArchivedError) {
+      return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to archive line item" } };
   }

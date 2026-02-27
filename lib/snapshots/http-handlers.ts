@@ -13,6 +13,12 @@ import {
   compareSnapshotParamsSchema,
   firstZodError
 } from "@/lib/validations";
+import {
+  AlreadyLockedError,
+  AlreadyUnlockedError,
+  NotFoundError,
+  SourceNotLockedError
+} from "@/lib/errors";
 
 type HandlerResult = {
   status: number;
@@ -31,16 +37,6 @@ type SnapshotServiceLike = {
 type CompareServiceLike = {
   compare: (snapshotAId: string, snapshotBId: string) => Promise<SnapshotCompareResult>;
 };
-
-function asErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  return "Unexpected error";
-}
-
-function isNotFound(error: unknown): boolean {
-  const message = asErrorMessage(error).toLowerCase();
-  return message.includes("not found") || (message.includes("no") && message.includes("found"));
-}
 
 export async function listSnapshots(service: SnapshotServiceLike): Promise<HandlerResult> {
   try {
@@ -63,7 +59,7 @@ export async function getSnapshot(
     const data = await service.getById(snapshotId);
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "Snapshot not found" } };
     }
     return { status: 500, body: { error: "Failed to fetch snapshot" } };
@@ -101,9 +97,8 @@ export async function lockSnapshot(
     const data = await service.lock({ snapshotId, lockedBy, reason });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
-    if (message.includes("already locked")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof AlreadyLockedError) {
+      return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to lock snapshot" } };
   }
@@ -123,9 +118,8 @@ export async function unlockSnapshot(
     const data = await service.unlock({ snapshotId, unlockedBy, reason });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
-    if (message.includes("already unlocked")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof AlreadyUnlockedError) {
+      return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to unlock snapshot" } };
   }
@@ -144,9 +138,8 @@ export async function copySnapshot(
     const data = await service.copyFromPrior(result.data);
     return { status: 201, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
-    if (message.includes("Can only copy from a locked snapshot")) {
-      return { status: 409, body: { error: message } };
+    if (error instanceof SourceNotLockedError) {
+      return { status: 409, body: { error: error.message } };
     }
     return { status: 500, body: { error: "Failed to copy snapshot" } };
   }
@@ -169,7 +162,7 @@ export async function compareSnapshots(
     const data = await service.compare(result.data.a, result.data.b);
     return { status: 200, body: { data } };
   } catch (error) {
-    if (isNotFound(error)) {
+    if (error instanceof NotFoundError) {
       return { status: 404, body: { error: "One or both snapshots not found" } };
     }
     return { status: 500, body: { error: "Failed to compare snapshots" } };
