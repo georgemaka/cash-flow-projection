@@ -36,23 +36,23 @@ Web-based cash flow projection tool for Sukut Properties.
 
 Add these to `.env` (see `.env.example` for the full list):
 
-| Variable | Description |
-|---|---|
+| Variable                            | Description                                  |
+| ----------------------------------- | -------------------------------------------- |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (from Clerk dashboard) |
-| `CLERK_SECRET_KEY` | Clerk secret key (from Clerk dashboard) |
-| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Sign-in page path (default: `/sign-in`) |
-| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Sign-up page path (default: `/sign-up`) |
+| `CLERK_SECRET_KEY`                  | Clerk secret key (from Clerk dashboard)      |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL`     | Sign-in page path (default: `/sign-in`)      |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL`     | Sign-up page path (default: `/sign-up`)      |
 
 ### Role Model
 
 Roles are stored in each user's **`publicMetadata.role`** in the Clerk dashboard.
 Valid values: `admin`, `editor`, `viewer`. Users without a role default to `viewer`.
 
-| Role | Permissions |
-|---|---|
-| `admin` | Full access — manage groups, line items, lock/unlock snapshots, template onboarding |
-| `editor` | Create snapshots, edit values (monthly actuals/projections) |
-| `viewer` | Read-only access to all data |
+| Role     | Permissions                                                                         |
+| -------- | ----------------------------------------------------------------------------------- |
+| `admin`  | Full access — manage groups, line items, lock/unlock snapshots, template onboarding |
+| `editor` | Create snapshots, edit values (monthly actuals/projections)                         |
+| `viewer` | Read-only access to all data                                                        |
 
 ### Assigning Roles
 
@@ -74,8 +74,28 @@ API endpoints enforce roles as follows:
 - `npm run format:check`
 - `npm run lint`
 - `npm run typecheck`
-- `npm run test:ci` *(requires Node 22)*
+- `npm run test:ci` _(requires Node 22)_
 - `npm run build`
+
+## Agent Workflow (Claude + Codex)
+
+This repo has automated review gates in GitHub:
+
+- Issue forms: `.github/ISSUE_TEMPLATE/`
+- PR template: `.github/pull_request_template.md`
+- Review workflows:
+  - `.github/workflows/review-gate.yml`
+  - `.github/workflows/issue-pr-sync.yml`
+
+Required flow for agent work:
+
+1. Start from a `ready-for-pr` issue.
+2. Implement and move issue to `needs-review`.
+3. Open PR with `Closes #<issue-number>`.
+4. Cross-review with the other agent.
+5. Merge only when `Quality Gates` and `Review Policy Checks` are green.
+
+See `.github/REVIEW_AUTOMATION.md` and `AGENTS.md` for full details.
 
 ## Notes
 

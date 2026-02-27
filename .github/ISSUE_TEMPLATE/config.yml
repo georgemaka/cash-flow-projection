@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project conventions
+    url: https://github.com/siaosi/cash-flow-projection/blob/main/CONVENTIONS.md
+    about: Review coding and collaboration standards before opening an issue.

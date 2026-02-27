@@ -1,0 +1,235 @@
+name: Review Gate
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: review-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-gate:
+    name: Review Policy Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed files
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed_files.txt
+          TOTAL_CHANGED="$(wc -l < changed_files.txt | tr -d ' ')"
+          echo "total_changed=$TOTAL_CHANGED" >> "$GITHUB_OUTPUT"
+
+          if grep -Eq '(^tests/|\.test\.[jt]sx?$|\.spec\.[jt]sx?$|^__tests__/)' changed_files.txt; then
+            echo "tests_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tests_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '(^docs/|\.md$|^\.github/)' changed_files.txt && ! grep -Eqv '(^docs/|\.md$|^\.github/)' changed_files.txt; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '(^prisma/|^app/api/|^middleware\.ts$|^lib/)' changed_files.txt; then
+            echo "risky_change=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "risky_change=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate PR template completion
+        id: template
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          BODY_FILE="$(mktemp)"
+          printf "%s" "${PR_BODY:-}" > "$BODY_FILE"
+
+          FAIL=0
+          REQUIRED_SECTIONS=(
+            "## Summary"
+            "## Review Findings"
+            "## Validation"
+            "## Tests"
+            "## Risk Check"
+            "## Notes for Reviewer"
+          )
+
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -Fq "$section" "$BODY_FILE"; then
+              echo "Missing section: $section"
+              FAIL=1
+            fi
+          done
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "template_ok=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "template_ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce tests or no-tests marker
+        id: tests_policy
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          DOCS_ONLY: ${{ steps.changes.outputs.docs_only }}
+          TESTS_CHANGED: ${{ steps.changes.outputs.tests_changed }}
+        run: |
+          set -euo pipefail
+          if [ "${DOCS_ONLY}" = "true" ]; then
+            echo "tests_policy_ok=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${TESTS_CHANGED}" = "true" ]; then
+            echo "tests_policy_ok=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if printf "%s" "${PR_BODY:-}" | grep -Fqi "[no-tests]"; then
+            echo "tests_policy_ok=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "tests_policy_ok=false" >> "$GITHUB_OUTPUT"
+          echo "Code changes detected without tests. Add tests or include [no-tests] with justification."
+          exit 1
+
+      - name: Build review packet body
+        if: always()
+        id: packet
+        env:
+          TOTAL_CHANGED: ${{ steps.changes.outputs.total_changed }}
+          TESTS_CHANGED: ${{ steps.changes.outputs.tests_changed }}
+          DOCS_ONLY: ${{ steps.changes.outputs.docs_only }}
+          RISKY_CHANGE: ${{ steps.changes.outputs.risky_change }}
+          TEMPLATE_OK: ${{ steps.template.outputs.template_ok || 'false' }}
+          TESTS_POLICY_OK: ${{ steps.tests_policy.outputs.tests_policy_ok || 'false' }}
+          GATE_RESULT: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          {
+            echo "<!-- review-gate-packet -->"
+            echo "## Review Gate Packet"
+            echo ""
+            echo "- Gate result: **${GATE_RESULT}**"
+            echo "- Files changed: **${TOTAL_CHANGED:-0}**"
+            echo "- Tests changed: **${TESTS_CHANGED}**"
+            echo "- Docs-only change: **${DOCS_ONLY}**"
+            echo "- Risky paths touched (`prisma/`, `app/api/`, `middleware.ts`, `lib/`): **${RISKY_CHANGE}**"
+            echo "- PR template complete: **${TEMPLATE_OK}**"
+            echo "- Tests policy satisfied: **${TESTS_POLICY_OK}**"
+            echo ""
+            echo "### Reviewer Checklist"
+            echo "- [ ] Prioritize correctness and regressions first"
+            echo "- [ ] Verify permission/security-sensitive paths"
+            echo "- [ ] Verify tests are sufficient for changed behavior"
+            echo "- [ ] Confirm findings are resolved before merge"
+          } > review_packet.md
+
+      - name: Upsert review packet comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('review_packet.md', 'utf8');
+            const marker = '<!-- review-gate-packet -->';
+            const issue_number = context.issue.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+
+            const existing = comments.find((c) =>
+              c.user?.type === 'Bot' && c.body?.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body
+              });
+            }
+
+      - name: Label PR when blocked
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            try {
+              await github.rest.issues.getLabel({
+                owner,
+                repo,
+                name: 'review-blocked'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: 'review-blocked',
+                  color: 'B60205',
+                  description: 'Review gate failed or blocked'
+                });
+              } else {
+                throw error;
+              }
+            }
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number,
+              labels: ['review-blocked']
+            });
+
+      - name: Remove blocked label when passing
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number,
+                name: 'review-blocked'
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
