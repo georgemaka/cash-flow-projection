@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { CompareData } from "@/components/snapshot-compare/types";
 import { SnapshotCompareView } from "@/components/snapshot-compare/SnapshotCompareView";
@@ -13,7 +13,8 @@ interface SnapshotOption {
   asOfMonth: string;
 }
 
-export default function SnapshotComparePage() {
+/** Inner component — uses useSearchParams, must be inside a Suspense boundary. */
+function ComparePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -77,16 +78,7 @@ export default function SnapshotComparePage() {
   const canCompare = selectedA && selectedB && selectedA !== selectedB;
 
   return (
-    <div className="dashboard-shell">
-      <div className="dashboard-header">
-        <button className="ghost-btn" onClick={() => router.push("/")} type="button">
-          &larr; Back
-        </button>
-        <p className="eyebrow">Snapshots</p>
-        <h1>Compare</h1>
-        <p className="subhead">Side-by-side delta view — B minus A</p>
-      </div>
-
+    <>
       {/* Snapshot selector */}
       <div className="cmp-selector-panel">
         <div className="cmp-selector-row">
@@ -133,7 +125,7 @@ export default function SnapshotComparePage() {
             disabled={!canCompare || comparing}
             type="button"
           >
-            {comparing ? "Comparing…" : "Compare"}
+            {comparing ? "Comparing\u2026" : "Compare"}
           </button>
         </div>
         {selectedA === selectedB && selectedA !== "" && (
@@ -149,7 +141,7 @@ export default function SnapshotComparePage() {
 
       {comparing && (
         <div className="cf-loading">
-          <p>Loading comparison…</p>
+          <p>Loading comparison\u2026</p>
         </div>
       )}
 
@@ -160,6 +152,33 @@ export default function SnapshotComparePage() {
           <p>Select two snapshots above and click Compare.</p>
         </div>
       )}
+    </>
+  );
+}
+
+export default function SnapshotComparePage() {
+  const router = useRouter();
+
+  return (
+    <div className="dashboard-shell">
+      <div className="dashboard-header">
+        <button className="ghost-btn" onClick={() => router.push("/")} type="button">
+          &larr; Back
+        </button>
+        <p className="eyebrow">Snapshots</p>
+        <h1>Compare</h1>
+        <p className="subhead">Side-by-side delta view — B minus A</p>
+      </div>
+      {/* Suspense required by Next.js 15 when useSearchParams is used in a child */}
+      <Suspense
+        fallback={
+          <div className="cf-loading">
+            <p>Loading\u2026</p>
+          </div>
+        }
+      >
+        <ComparePageContent />
+      </Suspense>
     </div>
   );
 }
