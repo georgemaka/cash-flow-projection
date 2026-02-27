@@ -7,6 +7,7 @@ import { NotesSidebar } from "./NotesSidebar";
 import type { GridData, PendingEdit, ViewMode } from "./types";
 import { ReasonRequiredError } from "@/lib/hooks/use-grid-data";
 import { BulkUpdatePanel } from "@/components/bulk-update/BulkUpdatePanel";
+import { useToast } from "@/components/ui/Toast";
 import "@/components/bulk-update/bulk-update.css";
 
 interface DataGridViewProps {
@@ -23,6 +24,7 @@ interface DataGridViewProps {
  * Manages pending edits and save state.
  */
 export function DataGridView({ data, editable, onSave, onReload }: DataGridViewProps) {
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>("combined");
   const [pendingEdits, setPendingEdits] = useState<PendingEdit[]>([]);
   const [saving, setSaving] = useState(false);
@@ -50,6 +52,16 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
     setGridData(data);
     setPendingEdits([]);
   }, [data]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    if (pendingEdits.length === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [pendingEdits.length]);
 
   const handleCellChange = useCallback((edit: PendingEdit) => {
     // Optimistically update the grid data
@@ -114,18 +126,19 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
       try {
         await onSave(pendingEdits, reason);
         clearDirtyFlags();
+        toast("Changes saved", "success");
       } catch (err) {
         if (err instanceof ReasonRequiredError) {
           setReasonPrompt({ threshold: err.threshold, delta: err.delta, field: err.field });
           setTimeout(() => reasonInputRef.current?.focus(), 50);
         } else {
-          throw err;
+          toast(err instanceof Error ? err.message : "Save failed", "error");
         }
       } finally {
         setSaving(false);
       }
     },
-    [onSave, pendingEdits, clearDirtyFlags]
+    [onSave, pendingEdits, clearDirtyFlags, toast]
   );
 
   const handleReasonConfirm = useCallback(async () => {
