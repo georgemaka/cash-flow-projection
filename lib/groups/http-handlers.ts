@@ -69,11 +69,7 @@ export async function createGroup(
   try {
     const data = await service.create(result.data as CreateGroupInput);
     return { status: 201, body: { data } };
-  } catch (error) {
-    const message = asErrorMessage(error);
-    if (message.includes("Invalid groupType")) {
-      return { status: 400, body: { error: message } };
-    }
+  } catch {
     return { status: 500, body: { error: "Failed to create group" } };
   }
 }
@@ -99,12 +95,8 @@ export async function updateGroup(
     });
     return { status: 200, body: { data } };
   } catch (error) {
-    const message = asErrorMessage(error);
     if (isNotFound(error)) {
       return { status: 404, body: { error: "Group not found" } };
-    }
-    if (message.includes("Invalid groupType")) {
-      return { status: 400, body: { error: message } };
     }
     return { status: 500, body: { error: "Failed to update group" } };
   }
