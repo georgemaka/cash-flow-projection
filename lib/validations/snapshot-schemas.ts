@@ -10,13 +10,13 @@ export const createSnapshotSchema = z.object({
 export const lockSnapshotSchema = z.object({
   snapshotId: nonEmptyString,
   lockedBy: nonEmptyString,
-  reason: z.string().trim().optional()
+  reason: z.string().trim().max(1000).optional()
 });
 
 export const unlockSnapshotSchema = z.object({
   snapshotId: nonEmptyString,
   unlockedBy: nonEmptyString,
-  reason: z.string().trim().optional()
+  reason: z.string().trim().max(1000).optional()
 });
 
 export const copySnapshotSchema = z.object({

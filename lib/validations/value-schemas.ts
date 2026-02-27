@@ -15,7 +15,7 @@ export const upsertValueSchema = z.object({
     .regex(/^-?\d+(\.\d{1,2})?$/, "must be a valid decimal amount")
     .nullable()
     .optional(),
-  note: z.string().nullable().optional(),
+  note: z.string().max(1000).nullable().optional(),
   updatedBy: z.string().optional(),
-  reason: z.string().trim().optional()
+  reason: z.string().trim().max(1000).optional()
 });
