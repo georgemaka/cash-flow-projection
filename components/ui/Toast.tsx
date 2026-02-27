@@ -64,7 +64,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               aria-label="Dismiss notification"
             >
-              \u00D7
+              {"\u00D7"}
             </button>
           </div>
         ))}
