@@ -67,11 +67,15 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
         if (!groupsRes.ok) throw new Error("Failed to fetch groups");
         if (!valuesRes.ok) throw new Error("Failed to fetch values");
 
-        const snapshot = await snapshotRes.json();
-        const groups = await groupsRes.json();
-        const values = await valuesRes.json();
+        const snapshotJson = await snapshotRes.json();
+        const groupsJson = await groupsRes.json();
+        const valuesJson = await valuesRes.json();
 
         if (cancelled) return;
+
+        const snapshot = snapshotJson.data ?? snapshotJson;
+        const groups = groupsJson.data ?? groupsJson;
+        const values = valuesJson.data ?? valuesJson;
 
         const gridData = assembleGridData(snapshot, groups, values);
         setData(gridData);
