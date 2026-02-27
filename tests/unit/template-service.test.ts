@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TemplateService } from "../../lib/templates";
 import { generateFiscalYearPeriods } from "../../lib/templates/types";
+import { NotFoundError, SourceNotLockedError } from "../../lib/errors";
 
 // ---------------------------------------------------------------------------
 // generateFiscalYearPeriods — pure function tests
@@ -236,11 +237,27 @@ describe("TemplateService.preview", () => {
     expect(preview.groups[1].lineItems[0].projectionMethod).toBe("prior_year_pct");
   });
 
-  it("throws if source snapshot is not locked", async () => {
+  it("throws SourceNotLockedError if source snapshot is not locked", async () => {
     prisma.snapshot.findUniqueOrThrow.mockResolvedValue(MOCK_DRAFT_SNAPSHOT);
 
-    await expect(service.preview("snap-2026-draft", 2027)).rejects.toThrow(
-      "Can only onboard from a locked snapshot"
+    await expect(service.preview("snap-2026-draft", 2027)).rejects.toThrow(SourceNotLockedError);
+  });
+
+  it("throws NotFoundError when snapshot does not exist", async () => {
+    prisma.snapshot.findUniqueOrThrow.mockRejectedValue(
+      Object.assign(new Error("No Snapshot found"), { code: "P2025" })
+    );
+
+    await expect(service.preview("missing", 2027)).rejects.toThrow(NotFoundError);
+  });
+
+  it("filters source values to active line items only", async () => {
+    await service.preview("snap-2026", 2027);
+
+    expect(prisma.value.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { snapshotId: "snap-2026", lineItem: { isActive: true } }
+      })
     );
   });
 
@@ -498,7 +515,7 @@ describe("TemplateService.onboard", () => {
     });
   });
 
-  it("throws if source snapshot is not locked", async () => {
+  it("throws SourceNotLockedError if source snapshot is not locked", async () => {
     prisma.snapshot.findUniqueOrThrow.mockResolvedValue(MOCK_DRAFT_SNAPSHOT);
 
     await expect(
@@ -508,7 +525,22 @@ describe("TemplateService.onboard", () => {
         targetYear: 2027,
         createdBy: "user-1"
       })
-    ).rejects.toThrow("Can only onboard from a locked snapshot");
+    ).rejects.toThrow(SourceNotLockedError);
+  });
+
+  it("filters source values to active line items only", async () => {
+    await service.onboard({
+      sourceSnapshotId: "snap-2026",
+      name: "2027 CF",
+      targetYear: 2027,
+      createdBy: "user-1"
+    });
+
+    expect(prisma.value.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { snapshotId: "snap-2026", lineItem: { isActive: true } }
+      })
+    );
   });
 
   it("logs an audit entry on successful onboarding", async () => {
@@ -672,7 +704,7 @@ describe("template http-handlers", () => {
 
     it("returns 409 for unlocked snapshot", async () => {
       const handler = await getHandler();
-      mockService.preview.mockRejectedValue(new Error("Can only onboard from a locked snapshot"));
+      mockService.preview.mockRejectedValue(new SourceNotLockedError());
 
       const result = await handler(mockService, {
         sourceSnapshotId: "snap-1",
@@ -736,7 +768,7 @@ describe("template http-handlers", () => {
 
     it("returns 404 for missing source snapshot", async () => {
       const handler = await getHandler();
-      mockService.onboard.mockRejectedValue(new Error("No Snapshot found"));
+      mockService.onboard.mockRejectedValue(new NotFoundError("Snapshot not found"));
 
       const result = await handler(mockService, {
         sourceSnapshotId: "not-real",
@@ -750,7 +782,7 @@ describe("template http-handlers", () => {
 
     it("returns 409 for draft source snapshot", async () => {
       const handler = await getHandler();
-      mockService.onboard.mockRejectedValue(new Error("Can only onboard from a locked snapshot"));
+      mockService.onboard.mockRejectedValue(new SourceNotLockedError());
 
       const result = await handler(mockService, {
         sourceSnapshotId: "snap-draft",
