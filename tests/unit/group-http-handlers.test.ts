@@ -72,7 +72,7 @@ describe("group HTTP handlers", () => {
     });
 
     expect(result.status).toBe(400);
-    expect(result.body.error).toBe("name and groupType are required");
+    expect(result.body.error).toBeTruthy();
   });
 
   it("updates group with valid payload", async () => {

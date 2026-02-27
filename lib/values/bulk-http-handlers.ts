@@ -1,4 +1,5 @@
 import type { BulkField, BulkOperation } from "./bulk-service";
+import { bulkUpdateSchema, bulkRestoreSchema, firstZodError } from "@/lib/validations";
 
 type HandlerResult = {
   status: number;
@@ -35,75 +36,32 @@ type BulkServiceLike = {
   ) => Promise<unknown>;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function getString(payload: Record<string, unknown>, field: string): string | null {
-  const v = payload[field];
-  if (typeof v !== "string") return null;
-  const t = v.trim();
-  return t.length > 0 ? t : null;
-}
-
-function isValidField(v: string): v is BulkField {
-  return v === "projected" || v === "actual";
-}
-
-function isValidOperation(v: string): v is BulkOperation {
-  return v === "multiply" || v === "add";
-}
-
 export async function handleBulkUpdate(
   service: BulkServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
+  const result = bulkUpdateSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
-  const snapshotId = getString(payload, "snapshotId");
-  if (!snapshotId) {
-    return { status: 400, body: { error: "snapshotId is required" } };
-  }
-
-  const fieldStr = getString(payload, "field");
-  if (!fieldStr || !isValidField(fieldStr)) {
-    return { status: 400, body: { error: "field must be 'projected' or 'actual'" } };
-  }
-
-  const operationStr = getString(payload, "operation");
-  if (!operationStr || !isValidOperation(operationStr)) {
-    return { status: 400, body: { error: "operation must be 'multiply' or 'add'" } };
-  }
-
-  const operand = Number(payload["operand"]);
-  if (!isFinite(operand)) {
-    return { status: 400, body: { error: "operand must be a finite number" } };
-  }
-
-  const groupId = getString(payload, "groupId");
-  const isPreview = payload["preview"] === true;
-  const reason = getString(payload, "reason");
-  const updatedBy = getString(payload, "updatedBy");
-
-  if (!isPreview && !reason) {
-    return { status: 400, body: { error: "reason is required when not in preview mode" } };
-  }
+  const { snapshotId, groupId, field, operation, operand, preview, reason, updatedBy } =
+    result.data;
+  const isPreview = preview === true;
 
   try {
     if (isPreview) {
-      const data = await service.preview(snapshotId, groupId, fieldStr, operationStr, operand);
+      const data = await service.preview(snapshotId, groupId ?? null, field, operation, operand);
       return { status: 200, body: { data } };
     }
     const data = await service.apply(
       snapshotId,
-      groupId,
-      fieldStr,
-      operationStr,
+      groupId ?? null,
+      field,
+      operation,
       operand,
       reason!,
-      updatedBy
+      updatedBy ?? null
     );
     return { status: 200, body: { data } };
   } catch {
@@ -115,44 +73,21 @@ export async function handleBulkRestore(
   service: BulkServiceLike,
   payload: unknown
 ): Promise<HandlerResult> {
-  if (!isRecord(payload)) {
-    return { status: 400, body: { error: "Invalid request body" } };
+  const result = bulkRestoreSchema.safeParse(payload);
+  if (!result.success) {
+    return { status: 400, body: { error: firstZodError(result.error) } };
   }
 
-  const snapshotId = getString(payload, "snapshotId");
-  if (!snapshotId) {
-    return { status: 400, body: { error: "snapshotId is required" } };
-  }
-
-  const reason = getString(payload, "reason");
-  if (!reason) {
-    return { status: 400, body: { error: "reason is required" } };
-  }
-
-  const updatedBy = getString(payload, "updatedBy");
-
-  const restoresRaw = payload["restores"];
-  if (!Array.isArray(restoresRaw) || restoresRaw.length === 0) {
-    return { status: 400, body: { error: "restores array is required and must not be empty" } };
-  }
-
-  const restores = restoresRaw
-    .filter(isRecord)
-    .map((r) => ({
-      lineItemId: r["lineItemId"] as string,
-      period: r["period"] as string,
-      projectedAmount:
-        r["projectedAmount"] !== undefined ? (r["projectedAmount"] as string | null) : null,
-      actualAmount: r["actualAmount"] !== undefined ? (r["actualAmount"] as string | null) : null
-    }))
-    .filter((r) => typeof r.lineItemId === "string" && typeof r.period === "string");
-
-  if (restores.length === 0) {
-    return { status: 400, body: { error: "No valid restore entries found" } };
-  }
+  const { snapshotId, reason, updatedBy, restores } = result.data;
+  const normalizedRestores = restores.map((r) => ({
+    lineItemId: r.lineItemId,
+    period: r.period,
+    projectedAmount: r.projectedAmount !== undefined ? (r.projectedAmount ?? null) : null,
+    actualAmount: r.actualAmount !== undefined ? (r.actualAmount ?? null) : null
+  }));
 
   try {
-    const data = await service.restore(snapshotId, restores, reason, updatedBy);
+    const data = await service.restore(snapshotId, normalizedRestores, reason, updatedBy ?? null);
     return { status: 200, body: { data } };
   } catch {
     return { status: 500, body: { error: "Bulk restore failed" } };
