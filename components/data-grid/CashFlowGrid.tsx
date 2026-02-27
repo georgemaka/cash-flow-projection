@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import type { GridData, GridGroup, GridRow, PendingEdit } from "./types";
 import { formatCurrency, formatPeriodLabel, parseCurrencyInput } from "./types";
 
@@ -19,9 +19,9 @@ export function CashFlowGrid({ data, editable, onCellChange, viewMode }: CashFlo
   const canEdit = editable && !isLocked;
 
   return (
-    <div className="cf-grid-wrapper">
+    <div className="cf-grid-wrapper" role="region" aria-label="Cash flow data grid">
       <div className="cf-grid-scroll">
-        <table className="cf-grid">
+        <table className="cf-grid" role="grid">
           <thead>
             <tr>
               <th className="cf-grid-label-col cf-grid-sticky-col">Line Item</th>
@@ -83,11 +83,11 @@ interface GroupSectionProps {
   onCellChange?: (edit: PendingEdit) => void;
 }
 
-function GroupSection({ group, periods, canEdit, viewMode, onCellChange }: GroupSectionProps) {
+const GroupSection = memo(function GroupSection({ group, periods, canEdit, viewMode, onCellChange }: GroupSectionProps) {
   return (
     <>
-      <tr className="cf-grid-group-header">
-        <td className="cf-grid-sticky-col" colSpan={1}>
+      <tr className="cf-grid-group-header" role="row">
+        <td className="cf-grid-sticky-col" colSpan={1} role="rowheader">
           <span className="cf-grid-group-name">{group.name}</span>
           <span className="cf-grid-group-type">{group.groupType.replace("_", " ")}</span>
         </td>
@@ -109,7 +109,7 @@ function GroupSection({ group, periods, canEdit, viewMode, onCellChange }: Group
       <SubtotalRow group={group} periods={periods} viewMode={viewMode} />
     </>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Line Item Row
@@ -233,6 +233,11 @@ function GridCell({
   const commitEdit = useCallback(() => {
     if (!editing || !onCellChange) return;
     const parsed = parseCurrencyInput(editValue);
+    if (editValue.trim() !== "" && parsed === null) {
+      // Invalid input — revert without committing
+      setEditing(null);
+      return;
+    }
     const current = editing === "projected" ? projected : actual;
     // Only emit if value actually changed
     if (parsed !== current) {
@@ -370,7 +375,7 @@ function GridCell({
   const displayValue = field === "projected" ? projected : actual;
 
   return (
-    <td className={cellClass} onDoubleClick={() => startEdit(field)}>
+    <td className={cellClass} onDoubleClick={() => startEdit(field)} role="gridcell" aria-label={`${field} ${formatPeriodLabel(period)}`}>
       {noteButton}
       {editing === field ? (
         <input
@@ -380,6 +385,7 @@ function GridCell({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitEdit}
           onKeyDown={handleKeyDown}
+          aria-label={`Edit ${field} for ${formatPeriodLabel(period)}`}
         />
       ) : (
         <span className={`cf-grid-val ${canEdit ? "cf-grid-val-editable" : ""}`}>
