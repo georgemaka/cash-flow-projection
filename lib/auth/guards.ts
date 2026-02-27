@@ -3,9 +3,12 @@ import { NextResponse } from "next/server";
 import type { AppRole, AuthContext } from "./types";
 import { isDevAuthBypassEnabled } from "./dev-bypass";
 
+const VALID_ROLES: readonly AppRole[] = ["admin", "editor", "viewer"];
+
 /**
  * Returns the current auth context (clerkUserId + role) or null if not signed in.
- * Role defaults to "viewer" if not set in publicMetadata.
+ * Role defaults to "viewer" if absent or not a recognised value — prevents
+ * unknown/malformed metadata from being treated as elevated access.
  */
 export async function getAuthContext(): Promise<AuthContext | null> {
   if (isDevAuthBypassEnabled()) {
@@ -13,7 +16,8 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   }
   const { userId, sessionClaims } = await auth();
   if (!userId) return null;
-  const role: AppRole = sessionClaims?.publicMetadata?.role ?? "viewer";
+  const raw = sessionClaims?.publicMetadata?.role;
+  const role: AppRole = VALID_ROLES.includes(raw as AppRole) ? (raw as AppRole) : "viewer";
   return { clerkUserId: userId, role };
 }
 

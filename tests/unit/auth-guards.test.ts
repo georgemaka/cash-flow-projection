@@ -45,6 +45,12 @@ describe("getAuthContext", () => {
     const ctx = await getAuthContext();
     expect(ctx?.role).toBe("viewer");
   });
+
+  it("defaults to viewer for an unknown/malformed role value", async () => {
+    mockAuth.mockResolvedValue(makeAuthResult("user_abc", "edtor") as never);
+    const ctx = await getAuthContext();
+    expect(ctx?.role).toBe("viewer");
+  });
 });
 
 describe("requireSignedIn", () => {
@@ -117,6 +123,12 @@ describe("requireEditorOrAbove", () => {
     mockAuth.mockResolvedValue(makeAuthResult(null) as never);
     const result = await requireEditorOrAbove();
     expect(result?.status).toBe(401);
+  });
+
+  it("returns 403 for unknown/malformed role (normalised to viewer)", async () => {
+    mockAuth.mockResolvedValue(makeAuthResult("user_123", "superadmin") as never);
+    const result = await requireEditorOrAbove();
+    expect(result?.status).toBe(403);
   });
 });
 
