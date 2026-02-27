@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { GridData, GridGroup, GridRow, PendingEdit } from "./types";
 import { formatCurrency, formatPeriodLabel, parseCurrencyInput } from "./types";
 
@@ -152,6 +152,7 @@ function LineItemRow({ row, periods, canEdit, viewMode, onCellChange }: LineItem
             period={p}
             projected={cell.projected}
             actual={cell.actual}
+            note={cell.note}
             dirty={cell.dirty}
             canEdit={canEdit}
             viewMode={viewMode}
@@ -186,6 +187,7 @@ interface GridCellProps {
   period: string;
   projected: string | null;
   actual: string | null;
+  note: string | null;
   dirty: boolean;
   canEdit: boolean;
   viewMode: string;
@@ -197,6 +199,7 @@ function GridCell({
   period,
   projected,
   actual,
+  note,
   dirty,
   canEdit,
   viewMode,
@@ -205,6 +208,15 @@ function GridCell({
   const [editing, setEditing] = useState<"projected" | "actual" | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteValue, setNoteValue] = useState("");
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Close note popover if snapshot becomes locked or note changes externally
+  useEffect(() => {
+    if (!canEdit) setNoteOpen(false);
+  }, [canEdit]);
 
   const startEdit = useCallback(
     (field: "projected" | "actual") => {
@@ -242,6 +254,68 @@ function GridCell({
     [commitEdit]
   );
 
+  const openNote = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setNoteValue(note ?? "");
+      setNoteOpen(true);
+      setTimeout(() => noteInputRef.current?.focus(), 0);
+    },
+    [note]
+  );
+
+  const commitNote = useCallback(() => {
+    if (!onCellChange) return;
+    const trimmed = noteValue.trim() || null;
+    if (trimmed !== note) {
+      onCellChange({ lineItemId, period, field: "note", value: trimmed });
+    }
+    setNoteOpen(false);
+  }, [noteValue, note, lineItemId, period, onCellChange]);
+
+  const cancelNote = useCallback(() => {
+    setNoteOpen(false);
+    setNoteValue("");
+  }, []);
+
+  const noteButton = (note || canEdit) ? (
+    <div className="cf-cell-note-area">
+      <button
+        className={`cf-note-btn${note ? " cf-note-btn-filled" : ""}`}
+        onClick={openNote}
+        type="button"
+        aria-label={note ? "Edit note" : "Add note"}
+        title={note ?? "Add note"}
+      >
+        {note ? "\u25CF" : "\u25CB"}
+      </button>
+      {noteOpen && (
+        <div className="cf-note-popover" role="dialog" onClick={(e) => e.stopPropagation()}>
+          <textarea
+            ref={noteInputRef}
+            className="cf-note-textarea"
+            value={noteValue}
+            onChange={(e) => setNoteValue(e.target.value)}
+            placeholder="Add a note\u2026"
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") cancelNote();
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) commitNote();
+            }}
+          />
+          <div className="cf-note-actions">
+            <button onClick={commitNote} type="button" className="cf-note-save">
+              Save
+            </button>
+            <button onClick={cancelNote} type="button" className="ghost-btn cf-note-cancel">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : null;
+
   const cellClass = `cf-grid-cell${dirty ? " cf-grid-cell-dirty" : ""}`;
 
   if (viewMode === "variance") {
@@ -250,6 +324,7 @@ function GridCell({
     const variance = act - proj;
     return (
       <td className={cellClass}>
+        {noteButton}
         <div className="cf-grid-variance-cell">
           <span
             className="cf-grid-val cf-grid-val-proj"
@@ -295,6 +370,7 @@ function GridCell({
 
   return (
     <td className={cellClass} onDoubleClick={() => startEdit(field)}>
+      {noteButton}
       {editing === field ? (
         <input
           ref={inputRef}

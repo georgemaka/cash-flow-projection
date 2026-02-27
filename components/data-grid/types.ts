@@ -45,7 +45,7 @@ export interface GridData {
 export interface PendingEdit {
   lineItemId: string;
   period: string;
-  field: "projected" | "actual";
+  field: "projected" | "actual" | "note";
   value: string | null;
 }
 

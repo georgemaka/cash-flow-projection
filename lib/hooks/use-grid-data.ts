@@ -95,10 +95,16 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
     async (edits: PendingEdit[], reason?: string) => {
       if (!snapshotId || edits.length === 0) return;
 
-      // Group edits by lineItemId + period to merge projected/actual changes
+      // Group edits by lineItemId + period to merge projected/actual/note changes
       const mergedEdits = new Map<
         string,
-        { lineItemId: string; period: string; projected?: string | null; actual?: string | null }
+        {
+          lineItemId: string;
+          period: string;
+          projected?: string | null;
+          actual?: string | null;
+          note?: string | null;
+        }
       >();
 
       for (const edit of edits) {
@@ -109,8 +115,10 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
         };
         if (edit.field === "projected") {
           existing.projected = edit.value;
-        } else {
+        } else if (edit.field === "actual") {
           existing.actual = edit.value;
+        } else {
+          existing.note = edit.value;
         }
         mergedEdits.set(key, existing);
       }
@@ -127,6 +135,7 @@ export function useGridData(snapshotId: string | null): UseGridDataResult {
               period: edit.period,
               projectedAmount: edit.projected !== undefined ? edit.projected : undefined,
               actualAmount: edit.actual !== undefined ? edit.actual : undefined,
+              note: edit.note !== undefined ? edit.note : undefined,
               updatedBy: null, // Will be set by auth context when available
               ...(reason ? { reason } : {})
             })
