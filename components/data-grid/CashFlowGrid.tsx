@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, memo } from "react";
-import type { GridData, GridGroup, GridRow, PendingEdit } from "./types";
-import { formatCurrency, formatPeriodLabel, parseCurrencyInput } from "./types";
+import type { GridData, GridGroup, GridRow, PendingEdit, ViewMode } from "./types";
+import { formatCurrency, formatPeriodLabel, parseCurrencyInput, getCombinedValue, isPastPeriod } from "./types";
 
 interface CashFlowGridProps {
   data: GridData;
@@ -10,8 +10,8 @@ interface CashFlowGridProps {
   editable: boolean;
   /** Callback when a cell value is committed. */
   onCellChange?: (edit: PendingEdit) => void;
-  /** Which value layer to show: projected, actual, or both. */
-  viewMode: "projected" | "actual" | "variance";
+  /** Which value layer to show. */
+  viewMode: ViewMode;
 }
 
 export function CashFlowGrid({ data, editable, onCellChange, viewMode }: CashFlowGridProps) {
@@ -25,11 +25,22 @@ export function CashFlowGrid({ data, editable, onCellChange, viewMode }: CashFlo
           <thead>
             <tr>
               <th className="cf-grid-label-col cf-grid-sticky-col">Line Item</th>
-              {data.periods.map((p) => (
-                <th key={p} className="cf-grid-period-col">
-                  {formatPeriodLabel(p)}
-                </th>
-              ))}
+              {data.periods.map((p) => {
+                const past = isPastPeriod(p);
+                return (
+                  <th
+                    key={p}
+                    className={`cf-grid-period-col${viewMode === "combined" && past ? " cf-grid-period-actual" : ""}`}
+                  >
+                    <span>{formatPeriodLabel(p)}</span>
+                    {viewMode === "combined" && (
+                      <span className={`cf-grid-period-tag ${past ? "cf-grid-period-tag-actual" : "cf-grid-period-tag-proj"}`}>
+                        {past ? "Act" : "Proj"}
+                      </span>
+                    )}
+                  </th>
+                );
+              })}
               <th className="cf-grid-total-col">Total</th>
             </tr>
             {viewMode === "variance" && (
@@ -137,6 +148,22 @@ function LineItemRow({ row, periods, canEdit, viewMode, onCellChange }: LineItem
   const projTotal = calcTotal("projected");
   const actTotal = calcTotal("actual");
 
+  const calcCombinedTotal = (): number => {
+    let sum = 0;
+    for (const p of periods) {
+      const cell = row.values[p];
+      if (!cell) continue;
+      const { value } = getCombinedValue(cell, p);
+      if (value !== null) sum += parseFloat(value);
+    }
+    return sum;
+  };
+
+  const displayTotal = (): number => {
+    if (viewMode === "combined") return calcCombinedTotal();
+    return viewMode === "projected" ? projTotal : actTotal;
+  };
+
   return (
     <tr className="cf-grid-row">
       <td className="cf-grid-sticky-col cf-grid-label">
@@ -171,7 +198,7 @@ function LineItemRow({ row, periods, canEdit, viewMode, onCellChange }: LineItem
           </div>
         ) : (
           <span className="cf-grid-total-value">
-            {formatCurrency((viewMode === "projected" ? projTotal : actTotal).toFixed(2))}
+            {formatCurrency(displayTotal().toFixed(2))}
           </span>
         )}
       </td>
@@ -371,6 +398,42 @@ function GridCell({
     );
   }
 
+  // Combined view: show actual for past months, projected for future
+  if (viewMode === "combined") {
+    const { value: combinedValue, source } = getCombinedValue(
+      { projected, actual, note, dirty },
+      period
+    );
+    const editField = source;
+    const isActual = source === "actual";
+
+    return (
+      <td
+        className={`${cellClass}${isActual ? " cf-grid-cell-actual" : ""}`}
+        onDoubleClick={() => startEdit(editField)}
+        role="gridcell"
+        aria-label={`${source} ${formatPeriodLabel(period)}`}
+      >
+        {noteButton}
+        {editing === editField ? (
+          <input
+            ref={inputRef}
+            className="cf-grid-input"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={handleKeyDown}
+            aria-label={`Edit ${source} for ${formatPeriodLabel(period)}`}
+          />
+        ) : (
+          <span className={`cf-grid-val ${canEdit ? "cf-grid-val-editable" : ""}`}>
+            {formatCurrency(combinedValue)}
+          </span>
+        )}
+      </td>
+    );
+  }
+
   const field = viewMode === "projected" ? "projected" : "actual";
   const displayValue = field === "projected" ? projected : actual;
 
@@ -417,12 +480,41 @@ function SubtotalRow({ group, periods, viewMode }: SubtotalRowProps) {
     return sum;
   };
 
+  const calcGroupCombined = (period: string): number => {
+    let sum = 0;
+    for (const row of group.rows) {
+      const cell = row.values[period];
+      if (!cell) continue;
+      const { value } = getCombinedValue(cell, period);
+      if (value !== null) sum += parseFloat(value);
+    }
+    return sum;
+  };
+
   const grandTotal = (field: "projected" | "actual"): number => {
     let sum = 0;
     for (const p of periods) {
       sum += calcGroupTotal(p, field);
     }
     return sum;
+  };
+
+  const grandCombinedTotal = (): number => {
+    let sum = 0;
+    for (const p of periods) {
+      sum += calcGroupCombined(p);
+    }
+    return sum;
+  };
+
+  const periodSubtotal = (p: string): number => {
+    if (viewMode === "combined") return calcGroupCombined(p);
+    return viewMode === "projected" ? calcGroupTotal(p, "projected") : calcGroupTotal(p, "actual");
+  };
+
+  const totalSubtotal = (): number => {
+    if (viewMode === "combined") return grandCombinedTotal();
+    return viewMode === "projected" ? grandTotal("projected") : grandTotal("actual");
   };
 
   return (
@@ -444,7 +536,7 @@ function SubtotalRow({ group, periods, viewMode }: SubtotalRowProps) {
                 </span>
               </div>
             ) : (
-              formatCurrency((viewMode === "projected" ? projSub : actSub).toFixed(2))
+              formatCurrency(periodSubtotal(p).toFixed(2))
             )}
           </td>
         );
@@ -459,9 +551,7 @@ function SubtotalRow({ group, periods, viewMode }: SubtotalRowProps) {
             </span>
           </div>
         ) : (
-          formatCurrency(
-            (viewMode === "projected" ? grandTotal("projected") : grandTotal("actual")).toFixed(2)
-          )
+          formatCurrency(totalSubtotal().toFixed(2))
         )}
       </td>
     </tr>
