@@ -230,6 +230,32 @@ describe("SnapshotService", () => {
       expect(mockSvCreate).toHaveBeenCalledWith({ data: { snapshotId: "snap-1" } });
       expect(mockSnapUpdate.mock.calls[0][0].data.structureVersionId).toBe("sv-1");
     });
+
+    it("uses status:'draft' in the transaction WHERE to prevent double-lock", async () => {
+      // The WHERE clause must include `status: "draft"` so Prisma rejects a
+      // concurrent lock attempt atomically (P2025) rather than silently overwriting.
+      const draftSnapshot = { id: "snap-1", status: "draft" };
+      const prismaAny = mockPrisma as Record<string, Record<string, ReturnType<typeof vi.fn>>>;
+      prismaAny.snapshot.findUniqueOrThrow.mockResolvedValue(draftSnapshot);
+
+      const mockSnapUpdate = vi
+        .fn()
+        .mockResolvedValue({ ...draftSnapshot, status: "locked", structureVersionId: "sv-1" });
+
+      prismaAny.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+        const tx = {
+          structureVersion: { create: vi.fn().mockResolvedValue({ id: "sv-1" }) },
+          snapshot: { update: mockSnapUpdate }
+        };
+        return fn(tx);
+      }) as never;
+      service = new SnapshotService(mockPrisma, mockAudit);
+
+      await service.lock({ snapshotId: "snap-1", lockedBy: "admin-1" });
+
+      const updateWhere = mockSnapUpdate.mock.calls[0][0].where;
+      expect(updateWhere).toMatchObject({ id: "snap-1", status: "draft" });
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -313,6 +339,20 @@ describe("SnapshotService", () => {
         "Need corrections",
         "ui_edit"
       );
+    });
+
+    it("uses status:'locked' in WHERE to prevent concurrent re-lock race condition", async () => {
+      // Verify unlock uses an atomic WHERE to prevent the window where a concurrent
+      // lock() completes between our pre-check and this update.
+      const lockedSnapshot = { id: "snap-1", status: "locked" };
+      const prismaAny = mockPrisma as Record<string, Record<string, ReturnType<typeof vi.fn>>>;
+      prismaAny.snapshot.findUniqueOrThrow.mockResolvedValue(lockedSnapshot);
+      prismaAny.snapshot.update.mockResolvedValue({ ...lockedSnapshot, status: "draft" });
+
+      await service.unlock({ snapshotId: "snap-1", unlockedBy: "admin-1" });
+
+      const updateWhere = prismaAny.snapshot.update.mock.calls[0][0].where;
+      expect(updateWhere).toMatchObject({ id: "snap-1", status: "locked" });
     });
   });
 

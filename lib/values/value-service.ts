@@ -41,6 +41,14 @@ export class ValueService {
   }
 
   async upsert(input: UpsertValueInput) {
+    const snapshot = await this.prisma.snapshot.findUniqueOrThrow({
+      where: { id: input.snapshotId },
+      select: { status: true }
+    });
+    if (snapshot.status === "locked") {
+      throw new Error("Cannot edit values in a locked snapshot");
+    }
+
     const periodDate = parsePeriod(input.period);
 
     const existing = await this.prisma.value.findUnique({

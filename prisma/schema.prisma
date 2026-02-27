@@ -139,4 +139,8 @@ model AuditLog {
   source    AuditSource
   timestamp DateTime    @default(now())
   user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tableName, recordId])
+  @@index([tableName, recordId, field])
+  @@index([userId])
 }

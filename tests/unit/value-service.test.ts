@@ -10,6 +10,9 @@ function createMockAudit() {
 
 function createMockPrisma() {
   return {
+    snapshot: {
+      findUniqueOrThrow: vi.fn().mockResolvedValue({ status: "draft" })
+    },
     value: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn(),
@@ -63,6 +66,21 @@ describe("ValueService", () => {
         }
       }
     });
+  });
+
+  it("throws when trying to upsert into a locked snapshot", async () => {
+    const prismaAny = mockPrisma as Record<string, Record<string, ReturnType<typeof vi.fn>>>;
+    prismaAny.snapshot.findUniqueOrThrow.mockResolvedValue({ status: "locked" });
+
+    await expect(
+      service.upsert({
+        lineItemId: "li-1",
+        snapshotId: "snap-locked",
+        period: "2026-01",
+        projectedAmount: "1000.00",
+        updatedBy: "user-1"
+      })
+    ).rejects.toThrow("Cannot edit values in a locked snapshot");
   });
 
   it("creates new value and logs audit create", async () => {

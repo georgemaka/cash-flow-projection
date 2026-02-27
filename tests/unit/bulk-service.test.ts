@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { applyOperation } from "@/lib/values/bulk-service";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyOperation, BulkValueService } from "@/lib/values/bulk-service";
 
 describe("applyOperation — multiply (% change)", () => {
   it("applies a positive percentage increase", () => {
@@ -57,5 +57,58 @@ describe("applyOperation — add (flat adjustment)", () => {
 
   it("handles large amounts without precision loss", () => {
     expect(applyOperation("1234567.89", "add", 111111.11)).toBe("1345679.00");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BulkValueService — locked-snapshot guards
+// ---------------------------------------------------------------------------
+
+function createMockPrisma(snapshotStatus: "draft" | "locked" = "draft") {
+  return {
+    snapshot: {
+      findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "snap-1", status: snapshotStatus })
+    },
+    value: {
+      findMany: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn().mockResolvedValue({})
+    },
+    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({}))
+  } as never;
+}
+
+describe("BulkValueService.apply", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("throws when snapshot is locked", async () => {
+    const svc = new BulkValueService(createMockPrisma("locked"));
+    await expect(
+      svc.apply("snap-1", null, "projected", "add", 500, "test reason", "user-1")
+    ).rejects.toThrow("Cannot apply bulk updates to a locked snapshot");
+  });
+
+  it("proceeds when snapshot is draft", async () => {
+    const mockPrisma = createMockPrisma("draft");
+    const svc = new BulkValueService(mockPrisma);
+    const result = await svc.apply("snap-1", null, "projected", "add", 0, "no-op", "user-1");
+    expect(result.count).toBe(0);
+  });
+});
+
+describe("BulkValueService.restore", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("throws when snapshot is locked", async () => {
+    const svc = new BulkValueService(createMockPrisma("locked"));
+    await expect(svc.restore("snap-1", [], "undo reason", "user-1")).rejects.toThrow(
+      "Cannot restore values in a locked snapshot"
+    );
+  });
+
+  it("proceeds when snapshot is draft", async () => {
+    const mockPrisma = createMockPrisma("draft");
+    const svc = new BulkValueService(mockPrisma);
+    const result = await svc.restore("snap-1", [], "undo", "user-1");
+    expect(result.count).toBe(0);
   });
 });

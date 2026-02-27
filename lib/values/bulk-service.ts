@@ -75,6 +75,14 @@ export class BulkValueService {
     reason: string,
     updatedBy: string | null
   ): Promise<BulkApplyResult> {
+    const snap = await this.prisma.snapshot.findUniqueOrThrow({
+      where: { id: snapshotId },
+      select: { status: true }
+    });
+    if (snap.status === "locked") {
+      throw new Error("Cannot apply bulk updates to a locked snapshot");
+    }
+
     const values = await this.fetchValues(snapshotId, groupId);
     const changes = this.computeChanges(values, field, operation, operand);
 
@@ -129,6 +137,14 @@ export class BulkValueService {
     reason: string,
     updatedBy: string | null
   ): Promise<{ count: number }> {
+    const snap = await this.prisma.snapshot.findUniqueOrThrow({
+      where: { id: snapshotId },
+      select: { status: true }
+    });
+    if (snap.status === "locked") {
+      throw new Error("Cannot restore values in a locked snapshot");
+    }
+
     await this.prisma.$transaction(async (tx: TxClient) => {
       for (const r of restores) {
         const periodDate = new Date(`${r.period}-01T00:00:00.000Z`);
