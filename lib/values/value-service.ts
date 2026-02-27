@@ -56,6 +56,13 @@ export class ValueService {
     // ── Material-change threshold check (ADR-005) ──────────────────────────
     // Only applies to existing records. New records are exempt.
     if (existing) {
+      // Normalise to Decimal — Prisma returns Decimal objects in production
+      // but test mocks may return strings or numbers.
+      const toDecimalOrNull = (v: unknown): Decimal | null => {
+        if (v === null || v === undefined) return null;
+        return new Decimal(v.toString());
+      };
+
       const fieldsToCheck: Array<{
         field: "projectedAmount" | "actualAmount";
         newStr: string | null | undefined;
@@ -64,12 +71,12 @@ export class ValueService {
         {
           field: "projectedAmount",
           newStr: input.projectedAmount,
-          oldDecimal: existing.projectedAmount
+          oldDecimal: toDecimalOrNull(existing.projectedAmount)
         },
         {
           field: "actualAmount",
           newStr: input.actualAmount,
-          oldDecimal: existing.actualAmount
+          oldDecimal: toDecimalOrNull(existing.actualAmount)
         }
       ];
 
