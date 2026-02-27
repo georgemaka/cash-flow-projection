@@ -25,3 +25,12 @@ pnpm-debug.log*
 .DS_Store
 coverage/
 dist/
+
+# local agent/tooling artifacts
+.agents/
+.claude/
+.vercel/
+test-results/
+skills-lock.json
+.github/PULL_REQUEST_BODY_*.md
+2026 Cash Flow Projection.xlsx
