@@ -1,7 +1,7 @@
-import { type PrismaClient, Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { diffFields, type AuditService } from "../audit";
 import type { ArchiveGroupInput, CreateGroupInput, GroupType, UpdateGroupInput } from "./types";
-import { AlreadyArchivedError, NotFoundError } from "@/lib/errors";
+import { AlreadyArchivedError, isPrismaNotFound, NotFoundError } from "@/lib/errors";
 
 const TRACKED_GROUP_FIELDS = ["name", "groupType", "sortOrder", "isActive", "archivedAt"];
 
@@ -26,7 +26,7 @@ export class GroupService {
     try {
       return await this.prisma.group.findUniqueOrThrow({ where: { id: groupId } });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Group not found: ${groupId}`);
       }
       throw e;
@@ -68,7 +68,7 @@ export class GroupService {
     try {
       current = await this.prisma.group.findUniqueOrThrow({ where: { id: input.groupId } });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Group not found: ${input.groupId}`);
       }
       throw e;
@@ -105,7 +105,7 @@ export class GroupService {
     try {
       current = await this.prisma.group.findUniqueOrThrow({ where: { id: input.groupId } });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Group not found: ${input.groupId}`);
       }
       throw e;

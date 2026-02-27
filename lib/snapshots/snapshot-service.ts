@@ -1,7 +1,8 @@
-import { type PrismaClient, Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import {
   AlreadyLockedError,
   AlreadyUnlockedError,
+  isPrismaNotFound,
   NotFoundError,
   SourceNotLockedError
 } from "@/lib/errors";
@@ -174,7 +175,8 @@ export class SnapshotService {
 
       if (sourceValues.length > 0) {
         await tx.value.createMany({
-          data: sourceValues.map((v) => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data: sourceValues.map((v: any) => ({
             lineItemId: v.lineItemId,
             snapshotId: newSnapshot.id,
             period: v.period,
@@ -232,7 +234,7 @@ export class SnapshotService {
         }
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError(`Snapshot not found: ${snapshotId}`);
       }
       throw e;

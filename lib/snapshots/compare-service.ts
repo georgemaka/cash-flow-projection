@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
-import { type PrismaClient, Prisma } from "@prisma/client";
-import { NotFoundError } from "@/lib/errors";
+import type { PrismaClient } from "@prisma/client";
+import { isPrismaNotFound, NotFoundError } from "@/lib/errors";
 
 export interface CompareCellData {
   aProjected: string | null;
@@ -65,7 +65,7 @@ export class CompareService {
         this.prisma.snapshot.findUniqueOrThrow({ where: { id: snapshotBId } })
       ]);
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      if (isPrismaNotFound(e)) {
         throw new NotFoundError("One or both snapshots not found");
       }
       throw e;
@@ -160,8 +160,9 @@ export class CompareService {
       return v.toString();
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const compareGroups: CompareGroupData[] = groups
-      .map((group) => {
+      .map((group: any) => {
         const groupLineItems = Array.from(lineItemsById.values())
           .filter((li) => li.groupId === group.id)
           .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -205,7 +206,7 @@ export class CompareService {
           rows
         };
       })
-      .filter((g) => g.rows.length > 0);
+      .filter((g: CompareGroupData) => g.rows.length > 0);
 
     return {
       snapshotA: { id: snapA.id, name: snapA.name, status: snapA.status },
