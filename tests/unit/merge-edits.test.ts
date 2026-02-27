@@ -10,27 +10,21 @@ describe("mergeEdits", () => {
     const result = mergeEdits([
       { lineItemId: "li-1", period: "2026-01", field: "projected", value: "1000.00" }
     ]);
-    expect(result).toEqual([
-      { lineItemId: "li-1", period: "2026-01", projected: "1000.00" }
-    ]);
+    expect(result).toEqual([{ lineItemId: "li-1", period: "2026-01", projected: "1000.00" }]);
   });
 
   it("passes through a single actual edit", () => {
     const result = mergeEdits([
       { lineItemId: "li-1", period: "2026-01", field: "actual", value: "950.00" }
     ]);
-    expect(result).toEqual([
-      { lineItemId: "li-1", period: "2026-01", actual: "950.00" }
-    ]);
+    expect(result).toEqual([{ lineItemId: "li-1", period: "2026-01", actual: "950.00" }]);
   });
 
   it("passes through a single note edit", () => {
     const result = mergeEdits([
       { lineItemId: "li-1", period: "2026-01", field: "note", value: "Revised forecast" }
     ]);
-    expect(result).toEqual([
-      { lineItemId: "li-1", period: "2026-01", note: "Revised forecast" }
-    ]);
+    expect(result).toEqual([{ lineItemId: "li-1", period: "2026-01", note: "Revised forecast" }]);
   });
 
   it("merges projected, actual, and note edits for the same cell into one record", () => {

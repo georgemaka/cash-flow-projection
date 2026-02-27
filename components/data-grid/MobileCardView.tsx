@@ -282,9 +282,7 @@ function MobileMonthRow({
               className={`cf-mobile-note-text${canEdit ? " cf-mobile-note-editable" : ""}`}
               onClick={canEdit ? startNoteEdit : undefined}
             >
-              {note ?? (
-                <span className="cf-mobile-note-placeholder">Add note\u2026</span>
-              )}
+              {note ?? <span className="cf-mobile-note-placeholder">Add note\u2026</span>}
             </div>
           )}
         </div>

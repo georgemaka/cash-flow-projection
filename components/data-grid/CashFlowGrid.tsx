@@ -278,43 +278,44 @@ function GridCell({
     setNoteValue("");
   }, []);
 
-  const noteButton = (note || canEdit) ? (
-    <div className="cf-cell-note-area">
-      <button
-        className={`cf-note-btn${note ? " cf-note-btn-filled" : ""}`}
-        onClick={openNote}
-        type="button"
-        aria-label={note ? "Edit note" : "Add note"}
-        title={note ?? "Add note"}
-      >
-        {note ? "\u25CF" : "\u25CB"}
-      </button>
-      {noteOpen && (
-        <div className="cf-note-popover" role="dialog" onClick={(e) => e.stopPropagation()}>
-          <textarea
-            ref={noteInputRef}
-            className="cf-note-textarea"
-            value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
-            placeholder="Add a note\u2026"
-            rows={3}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") cancelNote();
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) commitNote();
-            }}
-          />
-          <div className="cf-note-actions">
-            <button onClick={commitNote} type="button" className="cf-note-save">
-              Save
-            </button>
-            <button onClick={cancelNote} type="button" className="ghost-btn cf-note-cancel">
-              Cancel
-            </button>
+  const noteButton =
+    note || canEdit ? (
+      <div className="cf-cell-note-area">
+        <button
+          className={`cf-note-btn${note ? " cf-note-btn-filled" : ""}`}
+          onClick={openNote}
+          type="button"
+          aria-label={note ? "Edit note" : "Add note"}
+          title={note ?? "Add note"}
+        >
+          {note ? "\u25CF" : "\u25CB"}
+        </button>
+        {noteOpen && (
+          <div className="cf-note-popover" role="dialog" onClick={(e) => e.stopPropagation()}>
+            <textarea
+              ref={noteInputRef}
+              className="cf-note-textarea"
+              value={noteValue}
+              onChange={(e) => setNoteValue(e.target.value)}
+              placeholder="Add a note\u2026"
+              rows={3}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") cancelNote();
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) commitNote();
+              }}
+            />
+            <div className="cf-note-actions">
+              <button onClick={commitNote} type="button" className="cf-note-save">
+                Save
+              </button>
+              <button onClick={cancelNote} type="button" className="ghost-btn cf-note-cancel">
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  ) : null;
+        )}
+      </div>
+    ) : null;
 
   const cellClass = `cf-grid-cell${dirty ? " cf-grid-cell-dirty" : ""}`;
 
