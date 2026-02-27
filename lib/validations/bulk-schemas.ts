@@ -12,7 +12,7 @@ export const bulkUpdateSchema = z
     operation: bulkOperationSchema,
     operand: z.number().finite("operand must be a finite number"),
     preview: z.boolean().optional(),
-    reason: z.string().trim().min(1).optional(),
+    reason: z.string().trim().min(1).max(1000).optional(),
     updatedBy: z.string().trim().optional()
   })
   .refine((d) => d.preview === true || !!d.reason, {
@@ -37,7 +37,7 @@ const restoreEntrySchema = z.object({
 
 export const bulkRestoreSchema = z.object({
   snapshotId: nonEmptyString,
-  reason: nonEmptyString,
+  reason: nonEmptyString.max(1000),
   updatedBy: z.string().trim().optional(),
   restores: z.array(restoreEntrySchema).min(1, "restores array must not be empty")
 });

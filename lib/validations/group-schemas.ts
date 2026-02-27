@@ -17,7 +17,7 @@ export const updateGroupSchema = z
     groupType: groupTypeSchema.optional(),
     sortOrder: z.number().int().min(0).optional(),
     updatedBy: z.string().trim().optional(),
-    reason: z.string().trim().optional()
+    reason: z.string().trim().max(1000).optional()
   })
   .refine((d) => d.name !== undefined || d.groupType !== undefined || d.sortOrder !== undefined, {
     message: "No updatable fields provided"
@@ -26,5 +26,5 @@ export const updateGroupSchema = z
 export const archiveGroupSchema = z.object({
   groupId: nonEmptyString,
   archivedBy: z.string().trim().optional(),
-  reason: z.string().trim().optional()
+  reason: z.string().trim().max(1000).optional()
 });
