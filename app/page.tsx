@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SnapshotList } from "@/components/SnapshotList";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SnapshotDialog } from "@/components/ui/SnapshotDialog";
 
 interface SnapshotSummary {
   total: number;
@@ -13,26 +14,34 @@ interface SnapshotSummary {
 
 export default function HomePage() {
   const [stats, setStats] = useState<SnapshotSummary | null>(null);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  async function fetchStats() {
+    try {
+      const res = await fetch("/api/snapshots");
+      if (!res.ok) return;
+      const json = await res.json();
+      const list = json.data ?? json;
+      setStats({
+        total: list.length,
+        drafts: list.filter((s: { status: string }) => s.status === "draft").length,
+        locked: list.filter((s: { status: string }) => s.status === "locked").length,
+        latestName: list[0]?.name ?? null,
+      });
+    } catch {
+      // Stats are non-critical — fail silently
+    }
+  }
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/snapshots");
-        if (!res.ok) return;
-        const json = await res.json();
-        const list = json.data ?? json;
-        setStats({
-          total: list.length,
-          drafts: list.filter((s: { status: string }) => s.status === "draft").length,
-          locked: list.filter((s: { status: string }) => s.status === "locked").length,
-          latestName: list[0]?.name ?? null,
-        });
-      } catch {
-        // Stats are non-critical — fail silently
-      }
-    }
     fetchStats();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
+
+  function handleCreated() {
+    setRefreshKey((k) => k + 1);
+  }
 
   return (
     <main className="dashboard-shell">
@@ -92,9 +101,20 @@ export default function HomePage() {
       <section className="snapshot-section">
         <div className="panel-head">
           <h2>Snapshots</h2>
+          <button type="button" onClick={() => setShowNewDialog(true)}>
+            + New Snapshot
+          </button>
         </div>
-        <SnapshotList />
+        <SnapshotList refreshKey={refreshKey} onCreated={handleCreated} />
       </section>
+
+      {showNewDialog && (
+        <SnapshotDialog
+          mode="new"
+          onClose={() => setShowNewDialog(false)}
+          onCreated={handleCreated}
+        />
+      )}
     </main>
   );
 }

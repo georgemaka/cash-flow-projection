@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { SnapshotDialog } from "@/components/ui/SnapshotDialog";
 
 interface Snapshot {
   id: string;
@@ -14,21 +15,31 @@ interface Snapshot {
   locker?: { name: string; email: string } | null;
 }
 
-export function SnapshotList() {
+interface SnapshotListProps {
+  /** Increment to trigger a data refresh from outside. */
+  refreshKey?: number;
+  /** Called after a snapshot is created (copy) so the parent can refresh stats. */
+  onCreated?: () => void;
+}
+
+export function SnapshotList({ refreshKey = 0, onCreated }: SnapshotListProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [compareMode, setCompareMode] = useState(false);
   const [compareA, setCompareA] = useState<string | null>(null);
+  const [copyTarget, setCopyTarget] = useState<Snapshot | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     async function fetchSnapshots() {
       try {
         const res = await fetch("/api/snapshots");
         if (!res.ok) throw new Error("Failed to fetch snapshots");
         const json = await res.json();
         setSnapshots(json.data ?? json);
+        setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -36,7 +47,7 @@ export function SnapshotList() {
       }
     }
     fetchSnapshots();
-  }, []);
+  }, [refreshKey]);
 
   if (loading) {
     return (
@@ -78,57 +89,89 @@ export function SnapshotList() {
     }
   };
 
+  function handleCopyCreated() {
+    onCreated?.();
+    // Trigger self-refresh by bumping an internal key indirectly via the parent refreshKey.
+    // The copy dialog calls onCreated which increments refreshKey in the parent.
+  }
+
   return (
-    <div className="list-stack">
-      <div className="snapshot-list-toolbar">
-        <button
-          className={`ghost-btn${compareMode ? " snapshot-compare-active" : ""}`}
-          onClick={() => {
-            setCompareMode((m) => !m);
-            setCompareA(null);
-          }}
-          type="button"
-        >
-          {compareMode
-            ? compareA
-              ? "Pick second snapshot\u2026"
-              : "Pick first snapshot\u2026"
-            : "Compare two snapshots"}
-        </button>
-        {compareMode && (
+    <>
+      <div className="list-stack">
+        <div className="snapshot-list-toolbar">
           <button
-            className="ghost-btn"
+            className={`ghost-btn${compareMode ? " snapshot-compare-active" : ""}`}
             onClick={() => {
-              setCompareMode(false);
+              setCompareMode((m) => !m);
               setCompareA(null);
             }}
             type="button"
           >
-            Cancel
+            {compareMode
+              ? compareA
+                ? "Pick second snapshot\u2026"
+                : "Pick first snapshot\u2026"
+              : "Compare two snapshots"}
           </button>
-        )}
+          {compareMode && (
+            <button
+              className="ghost-btn"
+              onClick={() => {
+                setCompareMode(false);
+                setCompareA(null);
+              }}
+              type="button"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+        {snapshots.map((s) => {
+          const asOf = formatAsOfMonth(s.asOfMonth);
+          const isSelectedA = compareA === s.id;
+          return (
+            <div key={s.id} className="snapshot-row-wrap">
+              <button
+                className={`snapshot-row${isSelectedA ? " snapshot-row-selected" : ""}`}
+                onClick={() => handleSnapshotClick(s.id)}
+                type="button"
+              >
+                <span className={`snapshot-chip ${s.status}`}>{s.status}</span>
+                <span className="snapshot-name">{s.name}</span>
+                <span className="snapshot-month">{asOf}</span>
+                <span className="snapshot-month">{new Date(s.createdAt).toLocaleDateString()}</span>
+                <span className="ghost-btn">
+                  {compareMode ? (isSelectedA ? "Selected A" : "Select") : "Open"}
+                </span>
+              </button>
+              {!compareMode && (
+                <button
+                  className="ghost-btn snapshot-copy-btn"
+                  type="button"
+                  title="Copy this snapshot"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCopyTarget(s);
+                  }}
+                >
+                  Copy
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
-      {snapshots.map((s) => {
-        const asOf = formatAsOfMonth(s.asOfMonth);
-        const isSelectedA = compareA === s.id;
-        return (
-          <button
-            key={s.id}
-            className={`snapshot-row${isSelectedA ? " snapshot-row-selected" : ""}`}
-            onClick={() => handleSnapshotClick(s.id)}
-            type="button"
-          >
-            <span className={`snapshot-chip ${s.status}`}>{s.status}</span>
-            <span className="snapshot-name">{s.name}</span>
-            <span className="snapshot-month">{asOf}</span>
-            <span className="snapshot-month">{new Date(s.createdAt).toLocaleDateString()}</span>
-            <span className="ghost-btn">
-              {compareMode ? (isSelectedA ? "Selected A" : "Select") : "Open"}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+
+      {copyTarget && (
+        <SnapshotDialog
+          mode="copy"
+          sourceId={copyTarget.id}
+          sourceName={copyTarget.name}
+          onClose={() => setCopyTarget(null)}
+          onCreated={handleCopyCreated}
+        />
+      )}
+    </>
   );
 }
 

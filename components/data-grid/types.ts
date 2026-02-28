@@ -37,6 +37,10 @@ export interface GridData {
   snapshotId: string;
   snapshotName: string;
   snapshotStatus: "draft" | "locked";
+  /** ISO date string of when the snapshot was locked (null if draft). */
+  lockedAt: string | null;
+  /** Display name of the user who locked the snapshot (null if draft). */
+  lockerName: string | null;
   periods: string[];
   groups: GridGroup[];
 }

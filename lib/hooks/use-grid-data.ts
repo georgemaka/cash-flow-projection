@@ -157,6 +157,8 @@ interface SnapshotResponse {
   name: string;
   asOfMonth: string;
   status: "draft" | "locked";
+  lockedAt?: string | null;
+  locker?: { name: string | null; email: string } | null;
 }
 
 interface GroupResponse {
@@ -267,6 +269,8 @@ function assembleGridData(
     snapshotId: snapshot.id,
     snapshotName: snapshot.name,
     snapshotStatus: snapshot.status,
+    lockedAt: snapshot.lockedAt ?? null,
+    lockerName: snapshot.locker?.name ?? snapshot.locker?.email ?? null,
     periods,
     groups: gridGroups
   };

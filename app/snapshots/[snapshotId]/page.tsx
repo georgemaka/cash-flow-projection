@@ -101,6 +101,12 @@ export default function SnapshotDataEntryPage() {
                 <span className="detail-meta-item">
                   {data.groups.reduce((sum, g) => sum + g.rows.length, 0)} line items
                 </span>
+                {data.snapshotStatus === "locked" && data.lockedAt && (
+                  <span className="detail-meta-item">
+                    Locked {new Date(data.lockedAt).toLocaleDateString()}
+                    {data.lockerName ? ` by ${data.lockerName}` : ""}
+                  </span>
+                )}
               </div>
             </div>
             <div>
