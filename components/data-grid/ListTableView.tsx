@@ -41,15 +41,34 @@ function parseNum(v: string | null): number {
   return isNaN(n) ? 0 : n;
 }
 
+function matchesTextFilter(value: string | null, filter: string): boolean {
+  if (!filter) return true;
+  return (value ?? "").toLowerCase().includes(filter.trim().toLowerCase());
+}
+
+function matchesValueFilter(value: string | null, filter: string): boolean {
+  const trimmed = filter.trim();
+  if (!trimmed) return true;
+
+  const lower = trimmed.toLowerCase();
+  const raw = value ?? "";
+  const formatted = formatCurrency(value).toLowerCase();
+
+  return raw.toLowerCase().includes(lower) || formatted.includes(lower);
+}
+
 /* -----------------------------------------------------------------------
    Component
    ----------------------------------------------------------------------- */
 
 export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: ListTableViewProps) {
   // Filters
-  const [searchText, setSearchText] = useState("");
+  const [lineItemFilter, setLineItemFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
+  const [projectedFilter, setProjectedFilter] = useState("");
+  const [actualFilter, setActualFilter] = useState("");
+  const [notesFilter, setNotesFilter] = useState("");
   const [includeEmpty, setIncludeEmpty] = useState(false);
 
   // Sort
@@ -118,13 +137,21 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
     return allRows.filter((r) => {
       if (categoryFilter && r.groupId !== categoryFilter) return false;
       if (monthFilter && r.period !== monthFilter) return false;
-      if (searchText) {
-        const lower = searchText.toLowerCase();
-        if (!r.lineItemLabel.toLowerCase().includes(lower)) return false;
-      }
+      if (!matchesTextFilter(r.lineItemLabel, lineItemFilter)) return false;
+      if (!matchesValueFilter(r.projected, projectedFilter)) return false;
+      if (!matchesValueFilter(r.actual, actualFilter)) return false;
+      if (!matchesTextFilter(r.note, notesFilter)) return false;
       return true;
     });
-  }, [allRows, categoryFilter, monthFilter, searchText]);
+  }, [
+    actualFilter,
+    allRows,
+    categoryFilter,
+    lineItemFilter,
+    monthFilter,
+    notesFilter,
+    projectedFilter,
+  ]);
 
   /* -- Sort ----------------------------------------------------------- */
 
@@ -190,14 +217,14 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
   const commitEdit = (
     lineItemId: string,
     period: string,
-    field: "projected" | "actual" | "note"
+    field: "projected" | "actual" | "note",
+    currentValue: string | null
   ) => {
-    const value =
-      field === "note"
-        ? editValue.trim() || null
-        : parseCurrencyInput(editValue);
+    const value = field === "note" ? editValue.trim() || null : parseCurrencyInput(editValue);
 
-    onCellChange({ lineItemId, period, field, value });
+    if (value !== currentValue) {
+      onCellChange({ lineItemId, period, field, value });
+    }
     setEditingKey(null);
   };
 
@@ -210,10 +237,11 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
     e: React.KeyboardEvent,
     lineItemId: string,
     period: string,
-    field: "projected" | "actual" | "note"
+    field: "projected" | "actual" | "note",
+    currentValue: string | null
   ) => {
     if (e.key === "Enter" && (field !== "note" || e.metaKey || e.ctrlKey)) {
-      commitEdit(lineItemId, period, field);
+      commitEdit(lineItemId, period, field, currentValue);
     }
     if (e.key === "Escape") cancelEdit();
   };
@@ -261,175 +289,235 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
 
   return (
     <div>
-      {/* Filter bar */}
-      <div className="cf-list-filters">
-        <input
-          className="cf-list-search"
-          type="text"
-          placeholder="Search line items..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-        <select
-          className="cf-list-select"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">All Categories</option>
-          {data.groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="cf-list-select"
-          value={monthFilter}
-          onChange={(e) => setMonthFilter(e.target.value)}
-        >
-          <option value="">All Months</option>
-          {data.periods.map((p) => (
-            <option key={p} value={p}>
-              {formatPeriodLabel(p)}
-            </option>
-          ))}
-        </select>
-        <label className="cf-list-toggle">
-          <input
-            type="checkbox"
-            checked={includeEmpty}
-            onChange={(e) => setIncludeEmpty(e.target.checked)}
-          />{" "}
-          Include empty
-        </label>
-        <span className="cf-list-count">
-          {sortedRows.length} of {allRows.length} rows
-        </span>
-      </div>
-
       {/* Table */}
       <div className="cf-list-wrapper">
         <div className="cf-list-scroll">
           <table className="cf-list-table">
             <thead>
-              <tr>
-                <th className="cf-list-col-item" onClick={() => handleSort("lineItem")}>
-                  Line Item
-                  <span className="cf-list-sort-icon">{sortIcon("lineItem")}</span>
+              <tr className="cf-list-header-row">
+                <th className="cf-list-col-item">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("lineItem")} type="button">
+                    Line Item
+                    <span className="cf-list-sort-icon">{sortIcon("lineItem")}</span>
+                  </button>
                 </th>
-                <th className="cf-list-col-category" onClick={() => handleSort("category")}>
-                  Category
-                  <span className="cf-list-sort-icon">{sortIcon("category")}</span>
+                <th className="cf-list-col-category">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("category")} type="button">
+                    Category
+                    <span className="cf-list-sort-icon">{sortIcon("category")}</span>
+                  </button>
                 </th>
-                <th className="cf-list-col-month" onClick={() => handleSort("month")}>
-                  Month
-                  <span className="cf-list-sort-icon">{sortIcon("month")}</span>
+                <th className="cf-list-col-month">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("month")} type="button">
+                    Month
+                    <span className="cf-list-sort-icon">{sortIcon("month")}</span>
+                  </button>
                 </th>
-                <th className="cf-list-col-projected" onClick={() => handleSort("projected")}>
-                  Projected
-                  <span className="cf-list-sort-icon">{sortIcon("projected")}</span>
+                <th className="cf-list-col-projected">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("projected")} type="button">
+                    Projected
+                    <span className="cf-list-sort-icon">{sortIcon("projected")}</span>
+                  </button>
                 </th>
-                <th className="cf-list-col-actual" onClick={() => handleSort("actual")}>
-                  Actual
-                  <span className="cf-list-sort-icon">{sortIcon("actual")}</span>
+                <th className="cf-list-col-actual">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("actual")} type="button">
+                    Actual
+                    <span className="cf-list-sort-icon">{sortIcon("actual")}</span>
+                  </button>
                 </th>
-                <th className="cf-list-col-note" onClick={() => handleSort("note")}>
-                  Notes
-                  <span className="cf-list-sort-icon">{sortIcon("note")}</span>
+                <th className="cf-list-col-note">
+                  <button className="cf-list-sort-btn" onClick={() => handleSort("note")} type="button">
+                    Notes
+                    <span className="cf-list-sort-icon">{sortIcon("note")}</span>
+                  </button>
+                </th>
+              </tr>
+              <tr className="cf-list-filter-row">
+                <th className="cf-list-col-item">
+                  <input
+                    className="cf-list-filter-input"
+                    type="text"
+                    placeholder="Filter items"
+                    value={lineItemFilter}
+                    onChange={(e) => setLineItemFilter(e.target.value)}
+                  />
+                </th>
+                <th className="cf-list-col-category">
+                  <select
+                    className="cf-list-filter-select"
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                  >
+                    <option value="">All categories</option>
+                    {data.groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th className="cf-list-col-month">
+                  <select
+                    className="cf-list-filter-select"
+                    value={monthFilter}
+                    onChange={(e) => setMonthFilter(e.target.value)}
+                  >
+                    <option value="">All months</option>
+                    {data.periods.map((p) => (
+                      <option key={p} value={p}>
+                        {formatPeriodLabel(p)}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th className="cf-list-col-projected">
+                  <input
+                    className="cf-list-filter-input"
+                    type="text"
+                    placeholder="Filter values"
+                    value={projectedFilter}
+                    onChange={(e) => setProjectedFilter(e.target.value)}
+                  />
+                </th>
+                <th className="cf-list-col-actual">
+                  <input
+                    className="cf-list-filter-input"
+                    type="text"
+                    placeholder="Filter values"
+                    value={actualFilter}
+                    onChange={(e) => setActualFilter(e.target.value)}
+                  />
+                </th>
+                <th className="cf-list-col-note">
+                  <input
+                    className="cf-list-filter-input"
+                    type="text"
+                    placeholder="Filter notes"
+                    value={notesFilter}
+                    onChange={(e) => setNotesFilter(e.target.value)}
+                  />
                 </th>
               </tr>
             </thead>
             <tbody>
               {/* Add row form */}
               {editable && (
-                <tr className="cf-list-add-row">
-                  <td className="cf-list-col-item">
-                    <select
-                      className="cf-list-add-select"
-                      value={addItemId}
-                      onChange={(e) => setAddItemId(e.target.value)}
-                    >
-                      <option value="">Select item...</option>
-                      {data.groups.map((g) => (
-                        <optgroup key={g.id} label={g.name}>
-                          {g.rows.map((r) => (
-                            <option key={r.lineItemId} value={r.lineItemId}>
-                              {r.label}
+                <>
+                  <tr className="cf-list-add-row-header">
+                    <td colSpan={6}>
+                      <div className="cf-list-add-row-banner">
+                        <span className="cf-list-add-row-title">Add Entry</span>
+                        <span className="cf-list-add-row-desc">
+                          Choose an item and month, then enter any projected, actual, or note values.
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr className="cf-list-add-row">
+                    <td className="cf-list-col-item">
+                      <label className="cf-list-add-field">
+                        <span className="cf-list-add-label">Line Item</span>
+                        <select
+                          className="cf-list-add-select"
+                          value={addItemId}
+                          onChange={(e) => setAddItemId(e.target.value)}
+                        >
+                          <option value="">Select item...</option>
+                          {data.groups.map((g) => (
+                            <optgroup key={g.id} label={g.name}>
+                              {g.rows.map((r) => (
+                                <option key={r.lineItemId} value={r.lineItemId}>
+                                  {r.label}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </label>
+                    </td>
+                    <td className="cf-list-col-category">
+                      <div className="cf-list-add-field">
+                        <span className="cf-list-add-label">Category</span>
+                        <span className="cf-list-add-category-hint">
+                          {addItemId
+                            ? data.groups.find((g) =>
+                                g.rows.some((r) => r.lineItemId === addItemId)
+                              )?.name ?? ""
+                            : "Auto-filled from item"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="cf-list-col-month">
+                      <label className="cf-list-add-field">
+                        <span className="cf-list-add-label">Month</span>
+                        <select
+                          className="cf-list-add-select"
+                          value={addPeriod}
+                          onChange={(e) => setAddPeriod(e.target.value)}
+                        >
+                          <option value="">Month...</option>
+                          {data.periods.map((p) => (
+                            <option key={p} value={p}>
+                              {formatPeriodLabel(p)}
+                              {addItemId && existingCells.has(`${addItemId}:${p}`)
+                                ? " (has data)"
+                                : ""}
                             </option>
                           ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="cf-list-col-category">
-                    {/* Auto-filled from item selection */}
-                    <span className="cf-list-add-category-hint">
-                      {addItemId
-                        ? data.groups.find((g) =>
-                            g.rows.some((r) => r.lineItemId === addItemId)
-                          )?.name ?? ""
-                        : ""}
-                    </span>
-                  </td>
-                  <td className="cf-list-col-month">
-                    <select
-                      className="cf-list-add-select"
-                      value={addPeriod}
-                      onChange={(e) => setAddPeriod(e.target.value)}
-                    >
-                      <option value="">Month...</option>
-                      {data.periods.map((p) => (
-                        <option key={p} value={p}>
-                          {formatPeriodLabel(p)}
-                          {addItemId && existingCells.has(`${addItemId}:${p}`)
-                            ? " (has data)"
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="cf-list-col-projected">
-                    <input
-                      className="cf-list-add-input"
-                      type="text"
-                      placeholder="0"
-                      value={addProjected}
-                      onChange={(e) => setAddProjected(e.target.value)}
-                    />
-                  </td>
-                  <td className="cf-list-col-actual">
-                    <input
-                      className="cf-list-add-input"
-                      type="text"
-                      placeholder="0"
-                      value={addActual}
-                      onChange={(e) => setAddActual(e.target.value)}
-                    />
-                  </td>
-                  <td className="cf-list-col-note">
-                    <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                      <input
-                        className="cf-list-add-input"
-                        style={{ width: "100%", textAlign: "left" }}
-                        type="text"
-                        placeholder="Note..."
-                        value={addNote}
-                        onChange={(e) => setAddNote(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddRow();
-                        }}
-                      />
-                      <button
-                        className="cf-list-add-btn"
-                        onClick={handleAddRow}
-                        disabled={!addItemId || !addPeriod}
-                        type="button"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                        </select>
+                      </label>
+                    </td>
+                    <td className="cf-list-col-projected">
+                      <label className="cf-list-add-field">
+                        <span className="cf-list-add-label">Projected</span>
+                        <input
+                          className="cf-list-add-input"
+                          type="text"
+                          placeholder="0"
+                          value={addProjected}
+                          onChange={(e) => setAddProjected(e.target.value)}
+                        />
+                      </label>
+                    </td>
+                    <td className="cf-list-col-actual">
+                      <label className="cf-list-add-field">
+                        <span className="cf-list-add-label">Actual</span>
+                        <input
+                          className="cf-list-add-input"
+                          type="text"
+                          placeholder="0"
+                          value={addActual}
+                          onChange={(e) => setAddActual(e.target.value)}
+                        />
+                      </label>
+                    </td>
+                    <td className="cf-list-col-note">
+                      <label className="cf-list-add-field">
+                        <span className="cf-list-add-label">Notes</span>
+                        <div className="cf-list-add-note-wrap">
+                          <input
+                            className="cf-list-add-input cf-list-add-note-input"
+                            type="text"
+                            placeholder="Note..."
+                            value={addNote}
+                            onChange={(e) => setAddNote(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleAddRow();
+                            }}
+                          />
+                          <button
+                            className="cf-list-add-btn"
+                            onClick={handleAddRow}
+                            disabled={!addItemId || !addPeriod}
+                            type="button"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </label>
+                    </td>
+                  </tr>
+                </>
               )}
 
               {/* Data rows */}
@@ -483,17 +571,15 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
                           className="cf-list-input"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={() =>
-                            commitEdit(row.lineItemId, row.period, "projected")
-                          }
+                          onBlur={() => commitEdit(row.lineItemId, row.period, "projected", row.projected)}
                           onKeyDown={(e) =>
-                            handleKeyDown(e, row.lineItemId, row.period, "projected")
+                            handleKeyDown(e, row.lineItemId, row.period, "projected", row.projected)
                           }
                         />
                       ) : (
                         <span
                           className={editable ? "cf-list-editable" : ""}
-                          onDoubleClick={() =>
+                          onClick={() =>
                             startEdit(
                               row.lineItemId,
                               row.period,
@@ -515,17 +601,15 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
                           className="cf-list-input"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={() =>
-                            commitEdit(row.lineItemId, row.period, "actual")
-                          }
+                          onBlur={() => commitEdit(row.lineItemId, row.period, "actual", row.actual)}
                           onKeyDown={(e) =>
-                            handleKeyDown(e, row.lineItemId, row.period, "actual")
+                            handleKeyDown(e, row.lineItemId, row.period, "actual", row.actual)
                           }
                         />
                       ) : (
                         <span
                           className={editable ? "cf-list-editable" : ""}
-                          onDoubleClick={() =>
+                          onClick={() =>
                             startEdit(
                               row.lineItemId,
                               row.period,
@@ -547,11 +631,9 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
                           className="cf-list-note-input"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={() =>
-                            commitEdit(row.lineItemId, row.period, "note")
-                          }
+                          onBlur={() => commitEdit(row.lineItemId, row.period, "note", row.note)}
                           onKeyDown={(e) =>
-                            handleKeyDown(e, row.lineItemId, row.period, "note")
+                            handleKeyDown(e, row.lineItemId, row.period, "note", row.note)
                           }
                           rows={2}
                         />
@@ -583,6 +665,19 @@ export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: L
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="cf-list-status-bar">
+        <label className="cf-list-toggle">
+          <input
+            type="checkbox"
+            checked={includeEmpty}
+            onChange={(e) => setIncludeEmpty(e.target.checked)}
+          />
+          Include empty
+        </label>
+        <span className="cf-list-count">
+          Showing {sortedRows.length} of {allRows.length}
+        </span>
       </div>
     </div>
   );
