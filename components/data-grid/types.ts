@@ -50,7 +50,7 @@ export interface PendingEdit {
 }
 
 /** View mode options for the data grid. */
-export type ViewMode = "combined" | "projected" | "actual" | "variance";
+export type ViewMode = "combined" | "projected" | "actual" | "variance" | "list";
 
 /**
  * Determine whether a period (YYYY-MM) is in the past relative to today.

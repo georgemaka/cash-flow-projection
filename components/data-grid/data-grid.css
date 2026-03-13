@@ -781,6 +781,218 @@
 }
 
 /* -----------------------------------------------------------------------
+   View mode separator
+   ----------------------------------------------------------------------- */
+.cf-view-separator {
+  width: 1px;
+  height: 1.2rem;
+  background: var(--line);
+  margin: 0 0.15rem;
+  flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------
+   List table view
+   ----------------------------------------------------------------------- */
+.cf-list-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.cf-list-search {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.cf-list-search:focus {
+  border-color: var(--primary);
+}
+
+.cf-list-select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.cf-list-count {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cf-list-toggle {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cf-list-wrapper {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.cf-list-scroll {
+  overflow-x: auto;
+  max-height: calc(100vh - 16rem);
+  overflow-y: auto;
+}
+
+.cf-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.cf-list-table th,
+.cf-list-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.cf-list-table th {
+  background: #f5f8ff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cf-list-table th:hover {
+  color: var(--primary-deep);
+}
+
+.cf-list-sort-icon {
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+}
+
+.cf-list-col-item { text-align: left; min-width: 160px; }
+.cf-list-col-category { text-align: left; min-width: 120px; }
+.cf-list-col-month { text-align: center; min-width: 70px; }
+.cf-list-col-projected { text-align: right; min-width: 90px; }
+.cf-list-col-actual { text-align: right; min-width: 90px; }
+.cf-list-col-note { text-align: left; min-width: 140px; max-width: 260px; }
+
+.cf-list-row:hover {
+  background: #f8faff;
+}
+
+.cf-list-row-dirty {
+  background: #fff8e1;
+}
+
+.cf-list-editable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.1rem 0.25rem;
+}
+
+.cf-list-editable:hover {
+  background: #edf2ff;
+}
+
+.cf-list-input {
+  width: 80px;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.85rem;
+  text-align: right;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+.cf-list-note-input {
+  width: 100%;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.85rem;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.cf-list-note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+  display: inline-block;
+}
+
+.cf-list-add-row td {
+  background: #f5f8ff;
+  border-bottom: 2px solid var(--primary);
+}
+
+.cf-list-add-select {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  background: var(--card);
+  max-width: 160px;
+}
+
+.cf-list-add-input {
+  width: 70px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.82rem;
+  text-align: right;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  outline: none;
+}
+
+.cf-list-add-input:focus,
+.cf-list-add-select:focus {
+  border-color: var(--primary);
+}
+
+.cf-list-add-btn {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+  white-space: nowrap;
+}
+
+.cf-list-add-category-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cf-list-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* -----------------------------------------------------------------------
    Responsive
    ----------------------------------------------------------------------- */
 @media (max-width: 768px) {

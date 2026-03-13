@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CashFlowGrid } from "./CashFlowGrid";
+import { ListTableView } from "./ListTableView";
 import { MobileCardView } from "./MobileCardView";
 import { NotesSidebar } from "./NotesSidebar";
 import type { GridData, PendingEdit, ViewMode } from "./types";
@@ -183,9 +184,18 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
               {mode.charAt(0).toUpperCase() + mode.slice(1)}
             </button>
           ))}
+          <span className="cf-view-separator" />
+          <button
+            className={`ghost-btn${viewMode === "list" ? " cf-view-mode-active" : ""}`}
+            onClick={() => setViewMode("list")}
+            type="button"
+            aria-pressed={viewMode === "list"}
+          >
+            List
+          </button>
         </div>
         <div className="cf-view-actions">
-          {!isMobile && (
+          {!isMobile && viewMode !== "list" && (
             <button
               className={`ghost-btn${notesPanelOpen ? " cf-view-mode-active" : ""}`}
               onClick={() => setNotesPanelOpen((prev) => !prev)}
@@ -246,9 +256,15 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
         </div>
       )}
 
-      <div className={`cf-view-body${notesPanelOpen && !isMobile ? " cf-view-body-with-sidebar" : ""}`}>
+      <div className={`cf-view-body${notesPanelOpen && !isMobile && viewMode !== "list" ? " cf-view-body-with-sidebar" : ""}`}>
         <div className="cf-view-main">
-          {isMobile ? (
+          {viewMode === "list" ? (
+            <ListTableView
+              data={gridData}
+              editable={editable && !isLocked}
+              onCellChange={handleCellChange}
+            />
+          ) : isMobile ? (
             <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />
           ) : (
             <CashFlowGrid
@@ -259,7 +275,7 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
             />
           )}
         </div>
-        {notesPanelOpen && !isMobile && (
+        {notesPanelOpen && !isMobile && viewMode !== "list" && (
           <NotesSidebar
             data={gridData}
             editable={editable && !isLocked}
