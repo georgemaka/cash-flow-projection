@@ -28,6 +28,7 @@ interface ListTableViewProps {
   data: GridData;
   editable: boolean;
   onCellChange: (edit: PendingEdit) => void;
+  onMoveToGroup?: (lineItemId: string, newGroupId: string) => Promise<void>;
 }
 
 /* -----------------------------------------------------------------------
@@ -44,7 +45,7 @@ function parseNum(v: string | null): number {
    Component
    ----------------------------------------------------------------------- */
 
-export function ListTableView({ data, editable, onCellChange }: ListTableViewProps) {
+export function ListTableView({ data, editable, onCellChange, onMoveToGroup }: ListTableViewProps) {
   // Filters
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -59,6 +60,9 @@ export function ListTableView({ data, editable, onCellChange }: ListTableViewPro
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  // Category editing
+  const [editingCategoryItem, setEditingCategoryItem] = useState<string | null>(null);
 
   // Add row
   const [addItemId, setAddItemId] = useState("");
@@ -437,7 +441,38 @@ export function ListTableView({ data, editable, onCellChange }: ListTableViewPro
                     className={`cf-list-row${row.dirty ? " cf-list-row-dirty" : ""}`}
                   >
                     <td className="cf-list-col-item">{row.lineItemLabel}</td>
-                    <td className="cf-list-col-category">{row.groupName}</td>
+                    <td className="cf-list-col-category">
+                      {editable && onMoveToGroup && editingCategoryItem === row.lineItemId ? (
+                        <select
+                          className="cf-list-add-select"
+                          value={row.groupId}
+                          autoFocus
+                          onChange={async (e) => {
+                            const newGroupId = e.target.value;
+                            if (newGroupId !== row.groupId) {
+                              await onMoveToGroup(row.lineItemId, newGroupId);
+                            }
+                            setEditingCategoryItem(null);
+                          }}
+                          onBlur={() => setEditingCategoryItem(null)}
+                        >
+                          {data.groups.map((g) => (
+                            <option key={g.id} value={g.id}>{g.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span
+                          className={editable && onMoveToGroup ? "cf-list-editable" : ""}
+                          onClick={
+                            editable && onMoveToGroup
+                              ? () => setEditingCategoryItem(row.lineItemId)
+                              : undefined
+                          }
+                        >
+                          {row.groupName}
+                        </span>
+                      )}
+                    </td>
                     <td className="cf-list-col-month">{row.periodLabel}</td>
 
                     {/* Projected */}

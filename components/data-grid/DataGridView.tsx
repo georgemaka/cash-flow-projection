@@ -155,6 +155,27 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
     setReasonText("");
   }, []);
 
+  const handleMoveToGroup = useCallback(
+    async (lineItemId: string, newGroupId: string) => {
+      try {
+        const res = await fetch(`/api/line-items/${lineItemId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ groupId: newGroupId }),
+        });
+        if (!res.ok) {
+          const body = await res.json();
+          throw new Error(body.error ?? "Failed to move item");
+        }
+        toast("Item moved to new category", "success");
+        onReload?.();
+      } catch (err) {
+        toast(err instanceof Error ? err.message : "Move failed", "error");
+      }
+    },
+    [toast, onReload]
+  );
+
   const isLocked = gridData.snapshotStatus === "locked";
 
   const noteCount = useMemo(() => {
@@ -263,6 +284,7 @@ export function DataGridView({ data, editable, onSave, onReload }: DataGridViewP
               data={gridData}
               editable={editable && !isLocked}
               onCellChange={handleCellChange}
+              onMoveToGroup={handleMoveToGroup}
             />
           ) : isMobile ? (
             <MobileCardView data={gridData} editable={editable} onCellChange={handleCellChange} />

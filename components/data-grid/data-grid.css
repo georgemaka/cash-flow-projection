@@ -803,8 +803,9 @@
 }
 
 .cf-list-search {
-  flex: 1;
-  min-width: 160px;
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 280px;
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -817,6 +818,7 @@
 }
 
 .cf-list-select {
+  width: auto;
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -950,6 +952,7 @@
 }
 
 .cf-list-add-select {
+  width: auto;
   padding: 0.25rem 0.4rem;
   border: 1px solid var(--line);
   border-radius: 4px;
