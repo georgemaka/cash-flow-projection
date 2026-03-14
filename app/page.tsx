@@ -25,7 +25,7 @@ export default function HomePage() {
           total: list.length,
           drafts: list.filter((s: { status: string }) => s.status === "draft").length,
           locked: list.filter((s: { status: string }) => s.status === "locked").length,
-          latestName: list[0]?.name ?? null,
+          latestName: list[0]?.name ?? null
         });
       } catch {
         // Stats are non-critical — fail silently

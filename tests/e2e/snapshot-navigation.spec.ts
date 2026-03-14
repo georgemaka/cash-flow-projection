@@ -21,7 +21,9 @@ test.describe("snapshot list navigation", () => {
 
     await page.getByText("FY2026 Draft").click();
     await page.waitForURL("**/snapshots/snap-draft");
-    await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "FY2026 Draft" })).toBeVisible({
+      timeout: 10_000
+    });
   });
 
   test("snapshot status chips are displayed", async ({ page }) => {

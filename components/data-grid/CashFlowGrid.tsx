@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState, memo } from "react";
 import type { GridData, GridGroup, GridRow, PendingEdit, ViewMode } from "./types";
-import { formatCurrency, formatPeriodLabel, parseCurrencyInput, getCombinedValue, isPastPeriod } from "./types";
+import {
+  formatCurrency,
+  formatPeriodLabel,
+  parseCurrencyInput,
+  getCombinedValue,
+  isPastPeriod
+} from "./types";
 
 interface CashFlowGridProps {
   data: GridData;
@@ -34,7 +40,9 @@ export function CashFlowGrid({ data, editable, onCellChange, viewMode }: CashFlo
                   >
                     <span>{formatPeriodLabel(p)}</span>
                     {viewMode === "combined" && (
-                      <span className={`cf-grid-period-tag ${past ? "cf-grid-period-tag-actual" : "cf-grid-period-tag-proj"}`}>
+                      <span
+                        className={`cf-grid-period-tag ${past ? "cf-grid-period-tag-actual" : "cf-grid-period-tag-proj"}`}
+                      >
                         {past ? "Act" : "Proj"}
                       </span>
                     )}
@@ -94,7 +102,13 @@ interface GroupSectionProps {
   onCellChange?: (edit: PendingEdit) => void;
 }
 
-const GroupSection = memo(function GroupSection({ group, periods, canEdit, viewMode, onCellChange }: GroupSectionProps) {
+const GroupSection = memo(function GroupSection({
+  group,
+  periods,
+  canEdit,
+  viewMode,
+  onCellChange
+}: GroupSectionProps) {
   return (
     <>
       <tr className="cf-grid-group-header" role="row">
@@ -197,9 +211,7 @@ function LineItemRow({ row, periods, canEdit, viewMode, onCellChange }: LineItem
             </span>
           </div>
         ) : (
-          <span className="cf-grid-total-value">
-            {formatCurrency(displayTotal().toFixed(2))}
-          </span>
+          <span className="cf-grid-total-value">{formatCurrency(displayTotal().toFixed(2))}</span>
         )}
       </td>
     </tr>
@@ -438,7 +450,12 @@ function GridCell({
   const displayValue = field === "projected" ? projected : actual;
 
   return (
-    <td className={cellClass} onDoubleClick={() => startEdit(field)} role="gridcell" aria-label={`${field} ${formatPeriodLabel(period)}`}>
+    <td
+      className={cellClass}
+      onDoubleClick={() => startEdit(field)}
+      role="gridcell"
+      aria-label={`${field} ${formatPeriodLabel(period)}`}
+    >
       {noteButton}
       {editing === field ? (
         <input

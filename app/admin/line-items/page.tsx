@@ -17,7 +17,7 @@ interface Group {
 const GROUP_TYPE_OPTIONS = [
   { value: "sector", label: "Sector" },
   { value: "non_operating", label: "Non-Operating" },
-  { value: "custom", label: "Custom" },
+  { value: "custom", label: "Custom" }
 ];
 
 export default function LineItemsAdminPage() {
@@ -79,8 +79,8 @@ export default function LineItemsAdminPage() {
           name: newGroupName.trim(),
           groupType: newGroupType,
           sortOrder: maxSort + 1,
-          createdBy: undefined,
-        }),
+          createdBy: undefined
+        })
       });
       if (!res.ok) {
         const body = await res.json();
@@ -109,8 +109,8 @@ export default function LineItemsAdminPage() {
           body: JSON.stringify({
             name: editGroupName.trim(),
             groupType: editGroupType,
-            updatedBy: undefined,
-          }),
+            updatedBy: undefined
+          })
         });
         if (!res.ok) {
           const body = await res.json();
@@ -133,7 +133,7 @@ export default function LineItemsAdminPage() {
         const res = await fetch(`/api/groups/${groupId}`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ archivedBy: undefined }),
+          body: JSON.stringify({ archivedBy: undefined })
         });
         if (!res.ok) {
           const body = await res.json();
@@ -163,13 +163,13 @@ export default function LineItemsAdminPage() {
           fetch(`/api/groups/${active[idx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: active[swapIdx].sortOrder, updatedBy: undefined }),
+            body: JSON.stringify({ sortOrder: active[swapIdx].sortOrder, updatedBy: undefined })
           }),
           fetch(`/api/groups/${active[swapIdx].id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: active[idx].sortOrder, updatedBy: undefined }),
-          }),
+            body: JSON.stringify({ sortOrder: active[idx].sortOrder, updatedBy: undefined })
+          })
         ]);
         await fetchGroups();
         toast("Group reordered", "success");
@@ -249,10 +249,16 @@ export default function LineItemsAdminPage() {
                 />
                 <select value={newGroupType} onChange={(e) => setNewGroupType(e.target.value)}>
                   {GROUP_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
-                <button onClick={handleCreateGroup} disabled={creating || !newGroupName.trim()} type="button">
+                <button
+                  onClick={handleCreateGroup}
+                  disabled={creating || !newGroupName.trim()}
+                  type="button"
+                >
                   {creating ? "Creating..." : "Create"}
                 </button>
               </div>
@@ -273,14 +279,31 @@ export default function LineItemsAdminPage() {
                         }}
                         autoFocus
                       />
-                      <select value={editGroupType} onChange={(e) => setEditGroupType(e.target.value)}>
+                      <select
+                        value={editGroupType}
+                        onChange={(e) => setEditGroupType(e.target.value)}
+                      >
                         {GROUP_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
                         ))}
                       </select>
                       <div className="admin-group-edit-actions">
-                        <button onClick={() => handleEditGroup(g.id)} disabled={!editGroupName.trim()} type="button">Save</button>
-                        <button className="ghost-btn" onClick={() => setEditingGroupId(null)} type="button">Cancel</button>
+                        <button
+                          onClick={() => handleEditGroup(g.id)}
+                          disabled={!editGroupName.trim()}
+                          type="button"
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="ghost-btn"
+                          onClick={() => setEditingGroupId(null)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -294,16 +317,47 @@ export default function LineItemsAdminPage() {
                         <span className="admin-sidebar-type">{g.groupType.replace("_", " ")}</span>
                       </button>
                       <div className="admin-group-actions">
-                        <button className="admin-icon-btn" onClick={() => handleMoveGroup(g.id, "up")} disabled={idx === 0} type="button" title="Move up" aria-label="Move up">&#9650;</button>
-                        <button className="admin-icon-btn" onClick={() => handleMoveGroup(g.id, "down")} disabled={idx === activeGroups.length - 1} type="button" title="Move down" aria-label="Move down">&#9660;</button>
-                        <button className="admin-icon-btn" onClick={() => startEditGroup(g)} type="button" title="Edit" aria-label="Edit group">&#9998;</button>
+                        <button
+                          className="admin-icon-btn"
+                          onClick={() => handleMoveGroup(g.id, "up")}
+                          disabled={idx === 0}
+                          type="button"
+                          title="Move up"
+                          aria-label="Move up"
+                        >
+                          &#9650;
+                        </button>
+                        <button
+                          className="admin-icon-btn"
+                          onClick={() => handleMoveGroup(g.id, "down")}
+                          disabled={idx === activeGroups.length - 1}
+                          type="button"
+                          title="Move down"
+                          aria-label="Move down"
+                        >
+                          &#9660;
+                        </button>
+                        <button
+                          className="admin-icon-btn"
+                          onClick={() => startEditGroup(g)}
+                          type="button"
+                          title="Edit"
+                          aria-label="Edit group"
+                        >
+                          &#9998;
+                        </button>
                         <button
                           className="admin-icon-btn admin-icon-btn-danger"
-                          onClick={() => { if (confirm(`Archive "${g.name}"? This hides it from the grid.`)) handleArchiveGroup(g.id); }}
+                          onClick={() => {
+                            if (confirm(`Archive "${g.name}"? This hides it from the grid.`))
+                              handleArchiveGroup(g.id);
+                          }}
                           type="button"
                           title="Archive"
                           aria-label="Archive group"
-                        >&#128465;</button>
+                        >
+                          &#128465;
+                        </button>
                       </div>
                     </div>
                   )}
@@ -316,15 +370,22 @@ export default function LineItemsAdminPage() {
 
             {(archivedGroups.length > 0 || showArchived) && (
               <div className="admin-archived-section">
-                <button className="ghost-btn admin-archived-toggle" onClick={() => setShowArchived(!showArchived)} type="button">
-                  {showArchived ? `Hide archived (${archivedGroups.length})` : `Show archived (${archivedGroups.length})`}
+                <button
+                  className="ghost-btn admin-archived-toggle"
+                  onClick={() => setShowArchived(!showArchived)}
+                  type="button"
+                >
+                  {showArchived
+                    ? `Hide archived (${archivedGroups.length})`
+                    : `Show archived (${archivedGroups.length})`}
                 </button>
-                {showArchived && archivedGroups.map((g) => (
-                  <div key={g.id} className="admin-sidebar-item admin-sidebar-item-archived">
-                    <span>{g.name}</span>
-                    <span className="admin-sidebar-type">archived</span>
-                  </div>
-                ))}
+                {showArchived &&
+                  archivedGroups.map((g) => (
+                    <div key={g.id} className="admin-sidebar-item admin-sidebar-item-archived">
+                      <span>{g.name}</span>
+                      <span className="admin-sidebar-type">archived</span>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -332,7 +393,11 @@ export default function LineItemsAdminPage() {
           {/* Line item manager */}
           <div className="card panel">
             {selectedGroup ? (
-              <LineItemManager groupId={selectedGroup.id} groupName={selectedGroup.name} allGroups={activeGroups} />
+              <LineItemManager
+                groupId={selectedGroup.id}
+                groupName={selectedGroup.name}
+                allGroups={activeGroups}
+              />
             ) : (
               <div className="cf-empty-state">
                 <p>Select a group to manage its line items.</p>

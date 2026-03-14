@@ -3,7 +3,7 @@ export function Skeleton({
   width,
   height = "1rem",
   borderRadius = "8px",
-  className = "",
+  className = ""
 }: {
   width?: string;
   height?: string;

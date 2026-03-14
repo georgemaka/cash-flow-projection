@@ -37,7 +37,7 @@ describe("performance benchmarks", () => {
       const start = performance.now();
 
       // Simulate what useGridData does: build lookup maps and assemble grid
-      const valueLookup = new Map<string, Map<string, typeof BENCH_DATA.values[0]>>();
+      const valueLookup = new Map<string, Map<string, (typeof BENCH_DATA.values)[0]>>();
       for (const v of BENCH_DATA.values) {
         const periodStr = `${v.period.getUTCFullYear()}-${String(v.period.getUTCMonth() + 1).padStart(2, "0")}`;
         if (!valueLookup.has(v.lineItemId)) {
@@ -78,12 +78,13 @@ describe("performance benchmarks", () => {
     it("assembles grid with subtotal calculations in < 100ms", () => {
       const start = performance.now();
 
-      const periods = Array.from({ length: 12 }, (_, i) =>
-        `2026-${String(i + 1).padStart(2, "0")}`
+      const periods = Array.from(
+        { length: 12 },
+        (_, i) => `2026-${String(i + 1).padStart(2, "0")}`
       );
 
       // Build value lookup
-      const valueLookup = new Map<string, Map<string, typeof BENCH_DATA.values[0]>>();
+      const valueLookup = new Map<string, Map<string, (typeof BENCH_DATA.values)[0]>>();
       for (const v of BENCH_DATA.values) {
         const periodStr = `${v.period.getUTCFullYear()}-${String(v.period.getUTCMonth() + 1).padStart(2, "0")}`;
         if (!valueLookup.has(v.lineItemId)) {
@@ -200,11 +201,12 @@ describe("performance benchmarks", () => {
   describe("excel export", () => {
     it("generates XLSX for 50 line items in < 5s", async () => {
       // Build export data from benchmark data
-      const periods = Array.from({ length: 12 }, (_, i) =>
-        `2026-${String(i + 1).padStart(2, "0")}`
+      const periods = Array.from(
+        { length: 12 },
+        (_, i) => `2026-${String(i + 1).padStart(2, "0")}`
       );
 
-      const valueLookup = new Map<string, Map<string, typeof BENCH_DATA.values[0]>>();
+      const valueLookup = new Map<string, Map<string, (typeof BENCH_DATA.values)[0]>>();
       for (const v of BENCH_DATA.values) {
         const periodStr = `${v.period.getUTCFullYear()}-${String(v.period.getUTCMonth() + 1).padStart(2, "0")}`;
         if (!valueLookup.has(v.lineItemId)) {
@@ -250,10 +252,13 @@ describe("performance benchmarks", () => {
 
       expect(buffer).toBeTruthy();
       // Buffer should be non-trivial size for 50 items × 12 months
-      const bufferSize = buffer instanceof ArrayBuffer ? buffer.byteLength : (buffer as Buffer).length;
+      const bufferSize =
+        buffer instanceof ArrayBuffer ? buffer.byteLength : (buffer as Buffer).length;
       expect(bufferSize).toBeGreaterThan(5000);
       expect(elapsed).toBeLessThan(5000); // 5s budget (30s target with headroom for DB)
-      console.log(`Excel export: ${elapsed.toFixed(0)}ms, ${(bufferSize / 1024).toFixed(1)}KB (target < 5s)`);
+      console.log(
+        `Excel export: ${elapsed.toFixed(0)}ms, ${(bufferSize / 1024).toFixed(1)}KB (target < 5s)`
+      );
     });
   });
 });

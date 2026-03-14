@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => ({
   routeMatcher: vi.fn(),
   clerkRunner: vi.fn(() => ({ type: "clerk-response" })),
   protect: vi.fn(),
-  capturedHandler: null as null | ((auth: { protect: () => Promise<void> }, req: unknown) => Promise<void>)
+  capturedHandler: null as
+    | null
+    | ((auth: { protect: () => Promise<void> }, req: unknown) => Promise<void>)
 }));
 
 vi.mock("@/lib/auth/dev-bypass", () => ({
@@ -22,7 +24,9 @@ vi.mock("next/server", () => ({
 
 vi.mock("@clerk/nextjs/server", () => ({
   createRouteMatcher: mocks.createRouteMatcher,
-  clerkMiddleware: (handler: (auth: { protect: () => Promise<void> }, req: unknown) => Promise<void>) => {
+  clerkMiddleware: (
+    handler: (auth: { protect: () => Promise<void> }, req: unknown) => Promise<void>
+  ) => {
     mocks.capturedHandler = handler;
     return mocks.clerkRunner;
   }

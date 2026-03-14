@@ -161,7 +161,7 @@ export class CompareService {
     };
 
     const compareGroups: CompareGroupData[] = groups
-      .map((group) => {
+      .map((group: { id: string; name: string; groupType: string; sortOrder: number }) => {
         const groupLineItems = Array.from(lineItemsById.values())
           .filter((li) => li.groupId === group.id)
           .sort((a, b) => a.sortOrder - b.sortOrder);

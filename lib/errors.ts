@@ -59,9 +59,6 @@ export class LockedSnapshotError extends Error {
  */
 export function isPrismaNotFound(e: unknown): boolean {
   return (
-    typeof e === "object" &&
-    e !== null &&
-    "code" in e &&
-    (e as { code: string }).code === "P2025"
+    typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2025"
   );
 }

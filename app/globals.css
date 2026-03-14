@@ -37,7 +37,12 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -328,7 +333,9 @@ button:disabled {
   border-radius: var(--radius-lg);
   padding: 1.15rem 1.25rem;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition), transform var(--transition);
+  transition:
+    box-shadow var(--transition),
+    transform var(--transition);
 }
 
 .stat-card:hover {
@@ -633,8 +640,12 @@ select:focus {
    Skeleton Loading
    ====================================================================== */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .skeleton-pulse {

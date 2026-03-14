@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const NAV_LINKS = [
   { href: "/", label: "Dashboard" },
-  { href: "/admin/line-items", label: "Admin" },
+  { href: "/admin/line-items", label: "Admin" }
 ] as const;
 
 export function NavBar() {
@@ -26,10 +26,7 @@ export function NavBar() {
 
         <nav className={`nav-links${mobileOpen ? " nav-links-open" : ""}`}>
           {NAV_LINKS.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+            const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
