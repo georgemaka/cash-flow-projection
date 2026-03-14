@@ -7,6 +7,14 @@ const mocks = vi.hoisted(() => ({
   routeMatcher: vi.fn(),
   clerkRunner: vi.fn(() => ({ type: "clerk-response" })),
   protect: vi.fn(),
+  getClientIp: vi.fn(() => "127.0.0.1"),
+  rateCheck: vi.fn(() => ({
+    allowed: true,
+    limit: 60,
+    remaining: 59,
+    resetAt: Date.now() + 60_000,
+    retryAfterSeconds: 60
+  })),
   capturedHandler: null as null | ((auth: { protect: () => Promise<void> }, req: unknown) => Promise<void>)
 }));
 
@@ -14,9 +22,17 @@ vi.mock("@/lib/auth/dev-bypass", () => ({
   isDevAuthBypassEnabled: mocks.isDevAuthBypassEnabled
 }));
 
+vi.mock("@/lib/security/rate-limiter", () => ({
+  apiRateLimiter: {
+    check: mocks.rateCheck
+  },
+  getClientIp: mocks.getClientIp
+}));
+
 vi.mock("next/server", () => ({
   NextResponse: {
-    next: mocks.next
+    next: mocks.next,
+    json: vi.fn((body, init) => ({ type: "json-response", body, init }))
   }
 }));
 
@@ -35,6 +51,7 @@ async function loadMiddleware() {
 
 describe("middleware", () => {
   const req = { nextUrl: { pathname: "/dashboard" } } as unknown;
+  const apiReq = { nextUrl: { pathname: "/api/values" }, headers: new Headers() } as unknown;
   const event = {} as never;
 
   beforeEach(() => {
@@ -44,6 +61,13 @@ describe("middleware", () => {
     mocks.isDevAuthBypassEnabled.mockReturnValue(false);
     mocks.routeMatcher.mockReturnValue(false);
     mocks.createRouteMatcher.mockReturnValue(mocks.routeMatcher);
+    mocks.rateCheck.mockReturnValue({
+      allowed: true,
+      limit: 60,
+      remaining: 59,
+      resetAt: Date.now() + 60_000,
+      retryAfterSeconds: 60
+    });
   });
 
   it("initializes route matcher with public auth routes", async () => {
@@ -69,6 +93,25 @@ describe("middleware", () => {
     expect(mocks.clerkRunner).toHaveBeenCalledWith(req, event);
     expect(mocks.next).not.toHaveBeenCalled();
     expect(response).toEqual({ type: "clerk-response" });
+  });
+
+  it("returns 429 json response when API rate limit is exceeded", async () => {
+    const middleware = await loadMiddleware();
+    mocks.rateCheck.mockReturnValueOnce({
+      allowed: false,
+      limit: 60,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+      retryAfterSeconds: 60
+    });
+
+    const response = middleware(apiReq as never, event);
+    expect(response).toEqual({
+      type: "json-response",
+      body: { error: "Too many requests" },
+      init: expect.objectContaining({ status: 429 })
+    });
+    expect(mocks.clerkRunner).not.toHaveBeenCalled();
   });
 
   it("protects non-public routes in the Clerk auth handler", async () => {
